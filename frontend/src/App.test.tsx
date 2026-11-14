@@ -49,6 +49,28 @@ describe('главная', () => {
   });
 });
 
+describe('маршруты', () => {
+  it('/admin открывает типы встреч владельца', async () => {
+    mockEventTypesApi([intro]);
+    renderAt('/admin');
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Типы встреч' }),
+    ).toBeInTheDocument();
+  });
+
+  it('неизвестный адрес — «Страница не найдена» со ссылкой на главную и без ссылок на /admin', async () => {
+    const user = userEvent.setup();
+    renderAt('/no-such-page');
+
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Страница не найдена');
+    expect(adminLinks()).toEqual([]);
+
+    await user.click(screen.getByRole('link', { name: 'На главную' }));
+    expect(screen.getByRole('link', { name: 'Записаться' })).toBeInTheDocument();
+  });
+});
+
 describe('страница бронирования', () => {
   it('открывается по кнопке «Записаться» и возвращает на главную', async () => {
     const user = userEvent.setup();

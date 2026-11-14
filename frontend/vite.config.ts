@@ -19,6 +19,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
+    // Под нагрузкой на процессор (параллельные проверки) тест бывает дольше стандартных 5 с.
+    testTimeout: 15_000,
     coverage: {
       provider: 'v8',
       include: ['src/**/*.{ts,tsx}'],

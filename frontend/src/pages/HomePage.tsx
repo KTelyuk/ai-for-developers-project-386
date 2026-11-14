@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import { Button } from '@/components/ui/button.tsx';
+import { WINDOW_DAYS } from '@/lib/schedule.ts';
 
 const steps = [
   {
@@ -8,7 +9,7 @@ const steps = [
   },
   {
     title: 'Выберите день и время',
-    description: 'Свободные слоты на ближайшие 14 дней, по будням.',
+    description: `Свободные слоты на ближайшие ${WINDOW_DAYS} дней, по будням.`,
   },
   {
     title: 'Оставьте имя и email',

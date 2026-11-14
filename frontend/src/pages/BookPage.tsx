@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Clock, Globe } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router';
 import type { BookingCreated, EventType, Slot } from '@/api';
@@ -10,9 +10,10 @@ import { BookingForm } from '@/components/BookingForm.tsx';
 import { LoadError, Loading } from '@/components/LoadState.tsx';
 import { SlotList } from '@/components/SlotList.tsx';
 import { Button } from '@/components/ui/button.tsx';
-import { OWNER_TIME_ZONE_LABEL, formatDuration } from '@/lib/event-types.ts';
 import type { BookingFormValues } from '@/lib/bookings.ts';
-import { windowDays } from '@/lib/schedule.ts';
+import { formatDuration, momentDate } from '@/lib/format.ts';
+import { OWNER_TIME_ZONE_LABEL, windowDays } from '@/lib/schedule.ts';
+import { useOwnerToday } from '@/lib/use-owner-today.ts';
 import { cn } from '@/lib/utils.ts';
 
 // Выбор хранится в адресе: `/book?eventType=<id>&date=YYYY-MM-DD`.
@@ -49,8 +50,9 @@ export function BookPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedId = searchParams.get(EVENT_TYPE_PARAM);
   const selected = eventTypes.data?.find((eventType) => eventType.id === selectedId);
-  // Окно считается от даты открытия страницы: при следующем заходе оно сдвинется вместе с датой.
-  const [days] = useState(() => windowDays(new Date()));
+  // Окно сдвигается вместе с датой по Алматы, даже если страница остаётся открытой.
+  const today = useOwnerToday();
+  const days = useMemo(() => windowDays(today), [today]);
   const dateParam = searchParams.get(DATE_PARAM);
   const selectedDate = days.find((day) => day.date === dateParam && !day.weekend)?.date;
   // Выбранное время, сообщение о занятом времени и созданная запись живут только на этой странице:
@@ -60,7 +62,7 @@ export function BookPage() {
   const [created, setCreated] = useState<BookingCreated>();
   // Введённые имя и email переживают конфликт: форма для другого времени открывается с ними.
   const [guest, setGuest] = useState<BookingFormValues>();
-  const chosenSlot = slot && slot.startAt.slice(0, 10) === selectedDate ? slot : undefined;
+  const chosenSlot = slot && momentDate(slot.startAt) === selectedDate ? slot : undefined;
   const timeStep = useRef<HTMLElement>(null);
   // Закреплённые внизу кнопки шагов не должны закрывать конец страницы на телефоне.
   const withSteps = selected !== undefined && created === undefined;

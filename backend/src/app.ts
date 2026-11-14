@@ -14,7 +14,7 @@ const defaultFrontendDir = fileURLToPath(new URL('../../frontend/dist', import.m
 export type AppOptions = {
   clock?: Clock;
   store?: Store;
-  /** Built frontend to serve; skipped when the directory does not exist (dev, tests). */
+  /** Собранный фронтенд для отдачи; без каталога (разработка, тесты) не подключается. */
   frontendDir?: string;
 };
 

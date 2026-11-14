@@ -9,7 +9,7 @@ import {
 } from '@/api/@tanstack/react-query.gen.ts';
 import { LoadError, Loading } from '@/components/LoadState.tsx';
 import { Button } from '@/components/ui/button.tsx';
-import { formatBookingDate, formatTimeRange } from '@/lib/bookings.ts';
+import { formatMomentDay, formatTimeRange } from '@/lib/format.ts';
 
 function errorCode(error: unknown) {
   return (error as Partial<ApiError> | null)?.code;
@@ -104,7 +104,7 @@ export function BookingPage() {
           <dt className="text-muted-foreground">Встреча</dt>
           <dd className="break-words">{eventType.data?.title ?? '…'}</dd>
           <dt className="text-muted-foreground">Дата</dt>
-          <dd>{formatBookingDate(startAt)}</dd>
+          <dd>{formatMomentDay(startAt)}</dd>
           <dt className="text-muted-foreground">Время</dt>
           <dd>{formatTimeRange(startAt, endAt)} (Алматы)</dd>
           <dt className="text-muted-foreground">Имя</dt>

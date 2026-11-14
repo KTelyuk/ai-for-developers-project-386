@@ -1,15 +1,8 @@
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { ApiError as ErrorBody, ErrorCode } from './api/types.gen.ts';
 
-// Коды ошибок API (docs/spec.md, «Контракт API»).
-export type ErrorCode =
-  | 'VALIDATION_ERROR'
-  | 'NOT_FOUND'
-  | 'INVALID_TOKEN'
-  | 'SLOT_TAKEN'
-  | 'ALREADY_STARTED'
-  | 'SLOT_UNAVAILABLE';
-
-export type ErrorBody = { code: ErrorCode; message: string };
+// Коды и формат ошибки берутся из контракта (typespec/main.tsp, `ErrorCode` и `ApiError`).
+export type { ErrorBody, ErrorCode };
 
 // Ошибка, которую обработчик бросает, чтобы ответить 4xx в едином формате.
 export class ApiError extends Error {
@@ -32,7 +25,7 @@ export function sendNotFound(request: FastifyRequest, reply: FastifyReply) {
   return reply.status(404).send(body);
 }
 
-// Все ответы 4xx — `{ code, message }`: ошибки обработчиков и валидации из OpenAPI.
+// Все ответы ошибок — `{ code, message }`: ошибки обработчиков, валидации из OpenAPI и 500.
 export function registerErrorHandling(app: FastifyInstance) {
   app.setErrorHandler((error: FastifyError | ApiError, request, reply) => {
     if (error instanceof ApiError) {
@@ -49,6 +42,7 @@ export function registerErrorHandling(app: FastifyInstance) {
       return reply.status(statusCode).send(body);
     }
     request.log.error(error);
-    return reply.status(500).send({ code: 'INTERNAL_ERROR', message: 'Internal Server Error' });
+    const body: ErrorBody = { code: 'INTERNAL_ERROR', message: 'Internal Server Error' };
+    return reply.status(500).send(body);
   });
 }

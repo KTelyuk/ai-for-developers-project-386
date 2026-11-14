@@ -3,7 +3,8 @@ import type { BookingCreated, EventType } from '@/api';
 import { Button } from '@/components/ui/button.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { Label } from '@/components/ui/label.tsx';
-import { absoluteLink, formatBookingDate, formatTimeRange } from '@/lib/bookings.ts';
+import { absoluteLink } from '@/lib/bookings.ts';
+import { formatMomentDay, formatTimeRange } from '@/lib/format.ts';
 
 // Подтверждение брони: токен приходит только здесь, поэтому ссылку нужно сохранить сразу.
 export function BookingConfirmation({
@@ -39,7 +40,7 @@ export function BookingConfirmation({
         <dt className="text-muted-foreground">Встреча</dt>
         <dd className="break-words">{eventType.title}</dd>
         <dt className="text-muted-foreground">Дата</dt>
-        <dd>{formatBookingDate(booking.startAt)}</dd>
+        <dd>{formatMomentDay(booking.startAt)}</dd>
         <dt className="text-muted-foreground">Время</dt>
         <dd>{formatTimeRange(booking.startAt, booking.endAt)} (Алматы)</dd>
       </dl>

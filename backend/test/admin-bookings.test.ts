@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { createMemoryStore, type Booking, type Store } from '../src/store.ts';
+import { createMemoryStore, type Store, type StoredBooking } from '../src/store.ts';
 import { expectMatchesContract } from './contract.ts';
 import { buildTestApp } from './helpers.ts';
 
@@ -23,7 +23,7 @@ function booking(
   startAt: string,
   endAt: string,
   guestName = 'Анна',
-): Booking {
+): StoredBooking {
   return {
     id,
     eventTypeId,
@@ -75,7 +75,7 @@ const LATER_TODAY_UTC = booking(
   'Ева',
 );
 
-function seededStore(bookings: Booking[]): Store {
+function seededStore(bookings: StoredBooking[]): Store {
   const store = createMemoryStore();
   store.eventTypes.save(INTRO);
   store.eventTypes.save(CONSULTATION);

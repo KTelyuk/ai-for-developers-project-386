@@ -52,9 +52,10 @@ description = "Run all checks: lint, typecheck, tests"
 depends = ["lint", "typecheck", "test"]
 
 # Не входит в check: нужен запущенный сервер. Без E2E_BASE_URL Playwright сам поднимает
-# бэкенд с собранным фронтендом (сначала `mise run build`); в CI E2E_BASE_URL — контейнер.
+# бэкенд с собранным фронтендом, поэтому сначала собирается фронтенд; в CI E2E_BASE_URL — контейнер.
 [tasks.e2e]
-description = "Run Playwright e2e tests against the built app (run `mise run build` first)"
+description = "Build the frontend and run Playwright e2e tests against the app"
+depends = ["build"]
 run = "playwright test --config e2e/playwright.config.ts"
 
 [daemons.backend]

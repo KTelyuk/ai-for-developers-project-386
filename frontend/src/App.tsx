@@ -1,10 +1,11 @@
-import { Route, Routes } from 'react-router';
+import { Navigate, Route, Routes } from 'react-router';
 import { SiteHeader } from '@/components/SiteHeader.tsx';
 import { AdminBookingsPage } from '@/pages/AdminBookingsPage.tsx';
 import { AdminEventTypesPage } from '@/pages/AdminEventTypesPage.tsx';
 import { BookingPage } from '@/pages/BookingPage.tsx';
 import { BookPage } from '@/pages/BookPage.tsx';
 import { HomePage } from '@/pages/HomePage.tsx';
+import { NotFoundPage } from '@/pages/NotFoundPage.tsx';
 
 function App() {
   return (
@@ -15,8 +16,10 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/book" element={<BookPage />} />
           <Route path="/bookings/:id" element={<BookingPage />} />
+          <Route path="/admin" element={<Navigate to="/admin/event-types" replace />} />
           <Route path="/admin/event-types" element={<AdminEventTypesPage />} />
           <Route path="/admin/bookings" element={<AdminBookingsPage />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
     </div>

@@ -16,6 +16,7 @@ union ErrorCode {
   "SLOT_TAKEN",
   "ALREADY_STARTED",
   "SLOT_UNAVAILABLE",
+  "INTERNAL_ERROR",
 }
 
 model ApiError {
@@ -160,13 +161,13 @@ model Booking {
   createdAt: offsetDateTime;
 }
 
-// Тело брони. Имя обрезается по краям на сервере; email — `local@domain`, до 254 символов.
+// Тело брони. Email — `local@domain`, до 254 символов.
 model CreateBooking {
   eventTypeId: string;
   startAt: offsetDateTime;
 
-  @minLength(1)
-  @maxLength(100)
+  // Сервер сначала обрезает пробелы по краям, затем требует 1–100 символов (400 VALIDATION_ERROR).
+  // Длину схема не ограничивает: иначе 100 символов с пробелами по краям отклонились бы до обрезки.
   guestName: string;
 
   @maxLength(254)

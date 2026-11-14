@@ -453,8 +453,6 @@ components:
           format: date-time
         guestName:
           type: string
-          minLength: 1
-          maxLength: 100
         guestEmail:
           type: string
           maxLength: 254
@@ -503,6 +501,7 @@ components:
         - SLOT_TAKEN
         - ALREADY_STARTED
         - SLOT_UNAVAILABLE
+        - INTERNAL_ERROR
     EventType:
       type: object
       required:

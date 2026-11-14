@@ -78,6 +78,16 @@ describe('бронирование', () => {
     expect(link).toBe(`/bookings/${booking.id}?token=${token}`);
   });
 
+  it('длина имени проверяется после обрезки: 100 символов с пробелами по краям — можно', async () => {
+    app = buildTestApp({ store: storeWithEventTypes() });
+    const name = 'а'.repeat(100);
+
+    const response = await book({ guestName: `  ${name}  ` });
+
+    expect(response.statusCode).toBe(201);
+    expect(response.json().booking.guestName).toBe(name);
+  });
+
   it('у каждой записи свой токен', async () => {
     app = buildTestApp({ store: storeWithEventTypes() });
 
@@ -169,6 +179,7 @@ describe('бронирование', () => {
     ['пустое имя', { guestName: '' }],
     ['имя из пробелов', { guestName: '   ' }],
     ['имя длиннее 100', { guestName: 'а'.repeat(101) }],
+    ['имя длиннее 100 после обрезки', { guestName: ` ${'а'.repeat(101)} ` }],
     ['email без @', { guestEmail: 'anna.example.com' }],
     ['email с пробелом', { guestEmail: 'anna @example.com' }],
     ['email длиннее 254', { guestEmail: `${'a'.repeat(250)}@b.kz` }],

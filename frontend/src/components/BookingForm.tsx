@@ -7,12 +7,8 @@ import { createBookingMutation } from '@/api/@tanstack/react-query.gen.ts';
 import { Button } from '@/components/ui/button.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { Label } from '@/components/ui/label.tsx';
-import {
-  type BookingFormValues,
-  bookingFormSchema,
-  formatBookingDate,
-  formatTimeRange,
-} from '@/lib/bookings.ts';
+import { type BookingFormValues, bookingFormSchema } from '@/lib/bookings.ts';
+import { formatMomentDay, formatTimeRange } from '@/lib/format.ts';
 
 type Props = {
   eventType: EventType;
@@ -98,7 +94,7 @@ export function BookingForm({
         Ваши данные
       </h2>
       <p className="text-sm text-muted-foreground">
-        {formatBookingDate(slot.startAt)}, {formatTimeRange(slot.startAt, slot.endAt)}
+        {formatMomentDay(slot.startAt)}, {formatTimeRange(slot.startAt, slot.endAt)}
       </p>
       <div className="flex flex-col gap-2">
         <Label htmlFor={`${id}-name`}>Имя</Label>
