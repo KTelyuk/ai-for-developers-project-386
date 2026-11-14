@@ -453,8 +453,6 @@ components:
           format: date-time
         guestName:
           type: string
-          minLength: 1
-          maxLength: 100
         guestEmail:
           type: string
           maxLength: 254

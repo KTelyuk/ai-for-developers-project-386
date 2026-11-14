@@ -35,6 +35,20 @@ function normalizeTitle(title: string): string {
   return trimmed;
 }
 
+const GUEST_NAME_MAX_LENGTH = 100;
+
+// Длина имени проверяется после обрезки, поэтому контракт её не ограничивает (CreateBooking).
+function normalizeGuestName(name: string): string {
+  const trimmed = name.trim();
+  if (trimmed === '') {
+    throw new ApiError(400, 'VALIDATION_ERROR', 'Имя не может быть пустым');
+  }
+  if (trimmed.length > GUEST_NAME_MAX_LENGTH) {
+    throw new ApiError(400, 'VALIDATION_ERROR', 'Имя не длиннее 100 символов');
+  }
+  return trimmed;
+}
+
 // Обработчики по operationId из openapi/openapi.yaml. Зависимости приходят из buildApp.
 // Форму тела, длины полей и список длительностей уже проверил fastify-openapi-glue по контракту.
 export function createHandlers({ clock, store }: Deps) {
@@ -97,10 +111,7 @@ export function createHandlers({ clock, store }: Deps) {
       reply: FastifyReply,
     ): BookingCreated {
       const { eventTypeId, startAt, guestEmail } = request.body;
-      const guestName = request.body.guestName.trim();
-      if (guestName === '') {
-        throw new ApiError(400, 'VALIDATION_ERROR', 'Имя не может быть пустым');
-      }
+      const guestName = normalizeGuestName(request.body.guestName);
       const { durationMinutes } = findEventType(eventTypeId);
       const now = clock();
       const slot = slotStartingAt({ startAt, durationMinutes, now });
