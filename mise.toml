@@ -37,7 +37,7 @@ run = "hk fix --all"
 
 [tasks.typecheck]
 description = "Type-check all packages"
-run = ["npm run typecheck -w backend", "npm run typecheck -w frontend"]
+run = ["npm run typecheck -w backend", "npm run typecheck -w frontend", "tsc -p e2e"]
 
 [tasks.test]
 description = "Run all tests with coverage thresholds"
@@ -50,6 +50,12 @@ run = "npm run build -w frontend"
 [tasks.check]
 description = "Run all checks: lint, typecheck, tests"
 depends = ["lint", "typecheck", "test"]
+
+# Не входит в check: нужен запущенный сервер. Без E2E_BASE_URL Playwright сам поднимает
+# бэкенд с собранным фронтендом (сначала `mise run build`); в CI E2E_BASE_URL — контейнер.
+[tasks.e2e]
+description = "Run Playwright e2e tests against the built app (run `mise run build` first)"
+run = "playwright test --config e2e/playwright.config.ts"
 
 [daemons.backend]
 run = "npm run dev -w backend"
