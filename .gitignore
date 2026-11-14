@@ -6,3 +6,6 @@ dist/
 .env.*
 !.env.example
 mise.local.toml
+
+# Рабочие каталоги субагентов Claude Code
+.claude/worktrees/

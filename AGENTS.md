@@ -28,6 +28,7 @@ npm workspaces: `typespec/`, `backend/`, `frontend/`.
 ## Правила
 
 - Коммиты — [Conventional Commits](https://www.conventionalcommits.org/): `feat:`, `fix:`, `test:`, `docs:`, `refactor:`, `chore:`, `ci:`. Проверяет commit-msg хук hk.
+- Коммит реализации заканчивает заголовок номером issue, который он закрывает: `feat: запись на свободный слот (#12)`. GitHub превращает номер в ссылку, и по истории видно, какой коммит какую задачу делал.
 - Не изменять и не переименовывать `.github/workflows/hexlet-check.yml` — это проверка Хекслета.
 - Версии инструментов меняются только в `mise.toml` и `package.json`.
 
@@ -35,11 +36,11 @@ npm workspaces: `typespec/`, `backend/`, `frontend/`.
 
 ### Issue tracker
 
-Спецификация и тикеты — markdown-файлы в `docs/`: спецификация в spec.md, тикеты в tickets/NN-slug.md. Подробнее — `docs/agents/issue-tracker.md`.
+Тикеты — GitHub Issues этого репозитория (через `gh`), спецификация — `docs/spec.md`. Подробнее — `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
-Стандартные пять ролей (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`) — строка `Status:` в файле тикета. Подробнее — `docs/agents/triage-labels.md`.
+Стандартные пять ролей (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`) — метки issues на GitHub. Подробнее — `docs/agents/triage-labels.md`.
 
 ### Domain docs
 
