@@ -6,6 +6,7 @@ tags:
   - name: System
   - name: Event types
   - name: Slots
+  - name: Bookings
   - name: Admin
 paths:
   /api/admin/event-types:
@@ -69,6 +70,43 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/UpdateEventType'
+  /api/bookings:
+    post:
+      operationId: createBooking
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingCreated'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: The request conflicts with the current state of the server.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      tags:
+        - Bookings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBooking'
   /api/event-types:
     get:
       operationId: listEventTypes
@@ -218,6 +256,69 @@ components:
           $ref: '#/components/schemas/ErrorCode'
         message:
           type: string
+    Booking:
+      type: object
+      required:
+        - id
+        - eventTypeId
+        - guestName
+        - guestEmail
+        - startAt
+        - endAt
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        eventTypeId:
+          type: string
+        guestName:
+          type: string
+        guestEmail:
+          type: string
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    BookingCreated:
+      type: object
+      required:
+        - booking
+        - token
+        - link
+      properties:
+        booking:
+          $ref: '#/components/schemas/Booking'
+        token:
+          type: string
+        link:
+          type: string
+    CreateBooking:
+      type: object
+      required:
+        - eventTypeId
+        - startAt
+        - guestName
+        - guestEmail
+      properties:
+        eventTypeId:
+          type: string
+        startAt:
+          type: string
+          format: date-time
+        guestName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        guestEmail:
+          type: string
+          maxLength: 254
+          pattern: ^[^\s@]+@[^\s@]+$
     CreateEventType:
       type: object
       required:

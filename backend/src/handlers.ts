@@ -1,6 +1,8 @@
-import { randomUUID } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type {
+  BookingCreated,
+  CreateBooking,
   CreateEventType,
   DayAvailability,
   EventType,
@@ -10,8 +12,14 @@ import type {
 } from './api/types.gen.ts';
 import type { Clock } from './clock.ts';
 import { ApiError } from './errors.ts';
-import { daySlots, isInWindow, rangeDates } from './schedule.ts';
-import type { Store } from './store.ts';
+import { isIntervalFree } from './overlap.ts';
+import { daySlots, formatOwnerTime, isInWindow, rangeDates, slotStartingAt } from './schedule.ts';
+import type { Booking as StoredBooking, Store } from './store.ts';
+
+// Ссылка на страницу записи — путь от корня сайта с идентификатором и токеном отмены.
+function bookingLink(id: string, token: string): string {
+  return `/bookings/${id}?token=${encodeURIComponent(token)}`;
+}
 
 export type Deps = { clock: Clock; store: Store };
 
@@ -77,6 +85,43 @@ export function createHandlers({ clock, store }: Deps) {
         date,
         freeSlots: daySlots({ date, durationMinutes, bookings, now }).length,
       }));
+    },
+
+    // Проверка слота, пересечения и сохранение — одна синхронная операция без `await`:
+    // между проверкой и записью другой запрос не вклинится, и одно время не займут дважды.
+    createBooking(
+      request: FastifyRequest<{ Body: CreateBooking }>,
+      reply: FastifyReply,
+    ): BookingCreated {
+      const { eventTypeId, startAt, guestEmail } = request.body;
+      const guestName = request.body.guestName.trim();
+      if (guestName === '') {
+        throw new ApiError(400, 'VALIDATION_ERROR', 'Имя не может быть пустым');
+      }
+      const { durationMinutes } = findEventType(eventTypeId);
+      const now = clock();
+      const slot = slotStartingAt({ startAt, durationMinutes, now });
+      if (!slot) {
+        throw new ApiError(400, 'SLOT_UNAVAILABLE', 'Это время нельзя забронировать');
+      }
+      if (!isIntervalFree(slot, store.bookings.list())) {
+        throw new ApiError(409, 'SLOT_TAKEN', 'Это время уже занято');
+      }
+      // endAt берётся из длительности на момент брони: смена длительности типа его не меняет.
+      const record: StoredBooking = {
+        id: randomUUID(),
+        eventTypeId,
+        guestName,
+        guestEmail,
+        startAt: slot.startAt,
+        endAt: slot.endAt,
+        createdAt: formatOwnerTime(now.getTime()),
+        cancelToken: randomBytes(32).toString('base64url'),
+      };
+      store.bookings.save(record);
+      reply.code(201);
+      const { cancelToken: token, ...booking } = record;
+      return { booking, token, link: bookingLink(booking.id, token) };
     },
 
     createEventType(

@@ -77,6 +77,25 @@ export function rangeDates(from: string, to: string): string[] | undefined {
   return Array.from({ length }, (_, index) => toOwnerDate(start + index * DAY_MS));
 }
 
+// Слот, который начинается в момент `startAt`, без учёта записей: так бронь проверяет, что время —
+// слот по правилам расписания (на сетке, в рабочие часы, в окне, ещё не наступило).
+// Момент сравнивается как момент: `04:00Z` и `09:00+05:00` — одно и то же.
+export function slotStartingAt({
+  startAt,
+  durationMinutes,
+  now,
+}: {
+  startAt: string;
+  durationMinutes: number;
+  now: Date;
+}): Slot | undefined {
+  const startMs = Date.parse(startAt);
+  const date = toOwnerDate(startMs);
+  return daySlots({ date, durationMinutes, bookings: [], now }).find(
+    (slot) => Date.parse(slot.startAt) === startMs,
+  );
+}
+
 // Свободные слоты дня: будни, рабочие часы без обеда, шаг 15 минут, длительность типа встречи.
 // Слот недоступен, если его начало наступило (начало ≤ сейчас) или он пересекается с записью.
 // Дни вне окна и выходные — пустой список.

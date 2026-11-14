@@ -2,9 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Clock, Globe } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router';
-import type { EventType } from '@/api';
+import type { BookingCreated, EventType, Slot } from '@/api';
 import { listEventTypesOptions } from '@/api/@tanstack/react-query.gen.ts';
 import { AvailabilityCalendar } from '@/components/AvailabilityCalendar.tsx';
+import { BookingConfirmation } from '@/components/BookingConfirmation.tsx';
+import { BookingForm } from '@/components/BookingForm.tsx';
 import { SlotList } from '@/components/SlotList.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { OWNER_TIME_ZONE_LABEL, formatDuration } from '@/lib/event-types.ts';
@@ -48,6 +50,17 @@ export function BookPage() {
   const [days] = useState(() => windowDays(new Date()));
   const dateParam = searchParams.get(DATE_PARAM);
   const selectedDate = days.find((day) => day.date === dateParam && !day.weekend)?.date;
+  // Выбранное время, сообщение о занятом времени и созданная запись живут только на этой странице:
+  // токен из ответа не попадает в адрес и историю.
+  const [slot, setSlot] = useState<Slot>();
+  const [notice, setNotice] = useState<string>();
+  const [created, setCreated] = useState<BookingCreated>();
+  const chosenSlot = slot && slot.startAt.slice(0, 10) === selectedDate ? slot : undefined;
+
+  function chooseSlot(next: Slot | undefined, message?: string) {
+    setSlot(next);
+    setNotice(message);
+  }
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-8 sm:py-12">
@@ -68,6 +81,8 @@ export function BookPage() {
             <Link to="/">На главную</Link>
           </Button>
         </div>
+      ) : selected && created ? (
+        <BookingConfirmation eventType={selected} created={created} />
       ) : selected ? (
         <div className="flex flex-col gap-6">
           <div>
@@ -75,24 +90,51 @@ export function BookPage() {
               variant="outline"
               size="lg"
               className="h-11 px-6 text-base"
-              onClick={() => setSearchParams({})}
+              onClick={() => {
+                chooseSlot(undefined);
+                setSearchParams({});
+              }}
             >
               Назад
             </Button>
           </div>
+          {notice ? (
+            <p role="alert" className="text-destructive">
+              {notice}
+            </p>
+          ) : null}
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1fr)]">
             <div className="md:col-span-2 lg:col-span-1">
               <EventTypeInfo eventType={selected} />
             </div>
-            <AvailabilityCalendar
-              eventTypeId={selected.id}
-              days={days}
-              selected={selectedDate}
-              onSelect={(date) =>
-                setSearchParams({ [EVENT_TYPE_PARAM]: selected.id, [DATE_PARAM]: date })
-              }
-            />
-            <SlotList eventTypeId={selected.id} date={selectedDate} />
+            {chosenSlot ? (
+              <div className="lg:col-span-2">
+                <BookingForm
+                  eventType={selected}
+                  slot={chosenSlot}
+                  onBooked={setCreated}
+                  onSlotGone={(message) => chooseSlot(undefined, message)}
+                  onBack={() => chooseSlot(undefined)}
+                />
+              </div>
+            ) : (
+              <>
+                <AvailabilityCalendar
+                  eventTypeId={selected.id}
+                  days={days}
+                  selected={selectedDate}
+                  onSelect={(date) => {
+                    chooseSlot(undefined);
+                    setSearchParams({ [EVENT_TYPE_PARAM]: selected.id, [DATE_PARAM]: date });
+                  }}
+                />
+                <SlotList
+                  eventTypeId={selected.id}
+                  date={selectedDate}
+                  onSelect={(next) => chooseSlot(next)}
+                />
+              </>
+            )}
           </div>
         </div>
       ) : (

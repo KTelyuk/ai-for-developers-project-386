@@ -3,8 +3,8 @@
 import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { createEventType, getEventType, getHealth, listAvailability, listEventTypes, listSlots, type Options, updateEventType } from '../sdk.gen';
-import type { CreateEventTypeData, CreateEventTypeError, CreateEventTypeResponse, GetEventTypeData, GetEventTypeError, GetEventTypeResponse, GetHealthData, GetHealthResponse, ListAvailabilityData, ListAvailabilityError, ListAvailabilityResponse, ListEventTypesData, ListEventTypesResponse, ListSlotsData, ListSlotsError, ListSlotsResponse, UpdateEventTypeData, UpdateEventTypeError, UpdateEventTypeResponse } from '../types.gen';
+import { createBooking, createEventType, getEventType, getHealth, listAvailability, listEventTypes, listSlots, type Options, updateEventType } from '../sdk.gen';
+import type { CreateBookingData, CreateBookingError, CreateBookingResponse, CreateEventTypeData, CreateEventTypeError, CreateEventTypeResponse, GetEventTypeData, GetEventTypeError, GetEventTypeResponse, GetHealthData, GetHealthResponse, ListAvailabilityData, ListAvailabilityError, ListAvailabilityResponse, ListEventTypesData, ListEventTypesResponse, ListSlotsData, ListSlotsError, ListSlotsResponse, UpdateEventTypeData, UpdateEventTypeError, UpdateEventTypeResponse } from '../types.gen';
 
 export const createEventTypeMutation = (options?: Partial<Options<CreateEventTypeData>>): UseMutationOptions<CreateEventTypeResponse, CreateEventTypeError, Options<CreateEventTypeData>> => {
     const mutationOptions: UseMutationOptions<CreateEventTypeResponse, CreateEventTypeError, Options<CreateEventTypeData>> = {
@@ -24,6 +24,20 @@ export const updateEventTypeMutation = (options?: Partial<Options<UpdateEventTyp
     const mutationOptions: UseMutationOptions<UpdateEventTypeResponse, UpdateEventTypeError, Options<UpdateEventTypeData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await updateEventType({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const createBookingMutation = (options?: Partial<Options<CreateBookingData>>): UseMutationOptions<CreateBookingResponse, CreateBookingError, Options<CreateBookingData>> => {
+    const mutationOptions: UseMutationOptions<CreateBookingResponse, CreateBookingError, Options<CreateBookingData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await createBooking({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

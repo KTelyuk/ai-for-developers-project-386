@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateEventTypeData, CreateEventTypeErrors, CreateEventTypeResponses, GetEventTypeData, GetEventTypeErrors, GetEventTypeResponses, GetHealthData, GetHealthResponses, ListAvailabilityData, ListAvailabilityErrors, ListAvailabilityResponses, ListEventTypesData, ListEventTypesResponses, ListSlotsData, ListSlotsErrors, ListSlotsResponses, UpdateEventTypeData, UpdateEventTypeErrors, UpdateEventTypeResponses } from './types.gen';
+import type { CreateBookingData, CreateBookingErrors, CreateBookingResponses, CreateEventTypeData, CreateEventTypeErrors, CreateEventTypeResponses, GetEventTypeData, GetEventTypeErrors, GetEventTypeResponses, GetHealthData, GetHealthResponses, ListAvailabilityData, ListAvailabilityErrors, ListAvailabilityResponses, ListEventTypesData, ListEventTypesResponses, ListSlotsData, ListSlotsErrors, ListSlotsResponses, UpdateEventTypeData, UpdateEventTypeErrors, UpdateEventTypeResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -29,6 +29,15 @@ export const createEventType = <ThrowOnError extends boolean = false>(options: O
 
 export const updateEventType = <ThrowOnError extends boolean = false>(options: Options<UpdateEventTypeData, ThrowOnError>): RequestResult<UpdateEventTypeResponses, UpdateEventTypeErrors, ThrowOnError> => (options.client ?? client).patch<UpdateEventTypeResponses, UpdateEventTypeErrors, ThrowOnError>({
     url: '/api/admin/event-types/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const createBooking = <ThrowOnError extends boolean = false>(options: Options<CreateBookingData, ThrowOnError>): RequestResult<CreateBookingResponses, CreateBookingErrors, ThrowOnError> => (options.client ?? client).post<CreateBookingResponses, CreateBookingErrors, ThrowOnError>({
+    url: '/api/bookings',
     ...options,
     headers: {
         'Content-Type': 'application/json',
