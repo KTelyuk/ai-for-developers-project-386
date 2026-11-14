@@ -237,7 +237,7 @@ mise run install    # npm ci и git-хуки hk
   - `Booking`: `id`, `eventTypeId`, `guestName`, `guestEmail`, `startAt`, `endAt`, `createdAt`; `cancelToken` хранится на сервере и отдаётся гостю один раз при создании;
   - `Slot`: `startAt`, `endAt`.
 - Таблица эндпоинтов (см. этап 2).
-- Разбивка спецификации на тикеты в `docs/tickets/` — по одному файлу на тикет: цель, что сделать, критерии приёмки, какие тесты нужны.
+- Разбивка спецификации на тикеты в [GitHub Issues](https://github.com/KTelyuk/ai-for-developers-project-386/issues) — по одному issue на тикет: что сделать, критерии приёмки, блокирующие тикеты.
 
 **Готово, когда:** спецификация и тикеты закоммичены, открытых вопросов нет.
 

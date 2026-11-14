@@ -1,33 +1,35 @@
-# Issue tracker: Local Markdown in `docs/`
+# Issue tracker: GitHub Issues
 
-The spec and tickets for this repo live as markdown files in `docs/`, committed to git. The project has one spec, so there are no per-feature directories.
+Tickets for this repo live as GitHub issues in `KTelyuk/ai-for-developers-project-386`. The project has one spec, kept in git at `docs/spec.md` next to the code it describes. Use the `gh` CLI for all issue operations (from bash: `mise exec -- gh ...`, since `gh` is a mise tool).
 
 ## Conventions
 
-- The spec is `docs/spec.md`
-- Implementation tickets are one file per ticket at `docs/tickets/<NN>-<slug>.md`, numbered from `01`, never a single combined tickets file
-- Each ticket has these lines near the top:
-  - `Status:` the triage state (see `triage-labels.md` for the role strings), or `done` once implemented
-  - `Blocked by: NN, NN` the tickets that must be `done` first; omit the line when nothing blocks it
-- A ticket is unblocked when every ticket in its `Blocked by` line is `done`
-- Comments and conversation history append to the bottom of the file under a `## Comments` heading
-- **Close a ticket**: append what was done (with the commit hash) under `## Comments`, then set `Status: done`
+- **Create an issue**: `gh issue create --title "..." --body-file <file> --label <triage-label>`. Bodies use `## Что сделать` and `## Критерии приёмки` (checkboxes); refer to other tickets by `#<number>` or by title.
+- **Read an issue**: `gh issue view <number> --json number,title,body,labels,comments`.
+- **List issues**: `gh issue list --state open --json number,title,labels --label <label>`.
+- **Sub-issue**: `gh issue create --parent <parent> ...`, or `gh issue edit <parent> --add-sub-issue <child>`.
+- **Blocking**: GitHub's native issue dependencies. `gh issue create --blocked-by <n>,<n> ...` or `gh issue edit <child> --add-blocked-by <blocker>`. A ticket is unblocked when every blocker is closed; count open blockers with `gh issue view <n> --json blockedBy --jq '[.blockedBy.nodes[] | select(.state == "OPEN")] | length'`.
+- **Comment**: `gh issue comment <number> --body-file <file>`.
+- **Labels**: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`.
+- **Close a ticket**: the implementing commit ends its subject with `(#<number>)`, and the PR body says `Closes #<number>`, so merging into `main` closes the issue. To close by hand, comment what was done with the commit hash, then `gh issue close <number> --reason completed`.
+
+Issues and PRs share one number space, so a bare `#42` may be either: resolve with `gh issue view 42`, falling back to `gh pr view 42`.
 
 ## When a skill says "publish to the issue tracker"
 
-A spec goes to `docs/spec.md`; a ticket is a new file under `docs/tickets/` with the next free number.
+A spec goes to `docs/spec.md`; a ticket is a new GitHub issue.
 
 ## When a skill says "fetch the relevant ticket"
 
-Read the file at the referenced path. The user will normally pass the path or the ticket number directly (`03` → `docs/tickets/03-*.md`).
+Read it as in **Read an issue** above. The user normally passes the issue number (`#12` or `12`).
 
 ## Wayfinding operations
 
-Used by `/wayfinder`. The **map** is a file with one **child** file per ticket.
+Used by `/wayfinder`. The **map** is a single issue with **child** issues as tickets.
 
-- **Map**: `docs/wayfinder/<effort>/map.md` (the Notes / Decisions-so-far / Fog body).
-- **Child ticket**: `docs/wayfinder/<effort>/issues/NN-<slug>.md`, numbered from `01`, with the question in the body. A `Type:` line records the ticket type (`research`/`prototype`/`grilling`/`task`); a `Status:` line records `claimed`/`resolved`.
-- **Blocking**: a `Blocked by: NN, NN` line near the top. A ticket is unblocked when every file it lists is `resolved`.
-- **Frontier**: scan `docs/wayfinder/<effort>/issues/` for files that are open, unblocked, and unclaimed; first by number wins.
-- **Claim**: set `Status: claimed` and save before any work.
-- **Resolve**: append the answer under an `## Answer` heading, set `Status: resolved`, then append a context pointer (gist + link) to the map's Decisions-so-far in `map.md`.
+- **Map**: an issue labelled `wayfinder:map`, holding the Destination / Notes / Decisions-so-far / Not-yet-specified / Out-of-scope body.
+- **Child ticket**: a sub-issue of the map with the question in the body, labelled `wayfinder:<type>` (`research`/`prototype`/`grilling`/`task`).
+- **Blocking**: native dependencies, as in **Blocking** above.
+- **Frontier query**: the map's open sub-issues (`gh issue view <map> --json subIssues`), dropping any with an open blocker or an assignee; first in map order wins.
+- **Claim**: `gh issue edit <n> --add-assignee @me`, the session's first write.
+- **Resolve**: `gh issue comment <n>` with the answer, then `gh issue close <n> --reason completed`, then append a context pointer (`[title](issue URL): gist`) to the map's Decisions so far with `gh issue edit <map> --body-file <file>`.
