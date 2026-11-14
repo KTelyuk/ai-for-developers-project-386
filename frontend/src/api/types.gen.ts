@@ -30,6 +30,11 @@ export type HealthStatus = {
     status: 'ok';
 };
 
+export type Slot = {
+    startAt: string;
+    endAt: string;
+};
+
 export type CreateEventTypeData = {
     body: CreateEventType;
     path?: never;
@@ -97,6 +102,39 @@ export type GetEventTypeResponses = {
 };
 
 export type GetEventTypeResponse = GetEventTypeResponses[keyof GetEventTypeResponses];
+
+export type ListSlotsData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query: {
+        date: string;
+    };
+    url: '/api/event-types/{id}/slots';
+};
+
+export type ListSlotsErrors = {
+    /**
+     * The server could not understand the request due to invalid syntax.
+     */
+    400: ApiError;
+    /**
+     * The server cannot find the requested resource.
+     */
+    404: ApiError;
+};
+
+export type ListSlotsError = ListSlotsErrors[keyof ListSlotsErrors];
+
+export type ListSlotsResponses = {
+    /**
+     * The request has succeeded.
+     */
+    200: Array<Slot>;
+};
+
+export type ListSlotsResponse = ListSlotsResponses[keyof ListSlotsResponses];
 
 export type GetHealthData = {
     body?: never;
