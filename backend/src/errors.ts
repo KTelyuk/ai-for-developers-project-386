@@ -1,4 +1,4 @@
-import type { FastifyError, FastifyInstance } from 'fastify';
+import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
 // Коды ошибок API (docs/spec.md, «Контракт API»).
 export type ErrorCode =
@@ -23,16 +23,17 @@ export class ApiError extends Error {
   }
 }
 
-// Все ответы 4xx — `{ code, message }`: ошибки обработчиков, валидации из OpenAPI и неизвестные пути.
-export function registerErrorHandling(app: FastifyInstance) {
-  app.setNotFoundHandler((request, reply) => {
-    const body: ErrorBody = {
-      code: 'NOT_FOUND',
-      message: `Route ${request.method} ${request.url} not found`,
-    };
-    return reply.status(404).send(body);
-  });
+// Ответ на неизвестный путь в едином формате; подключает `buildApp` вместе с отдачей фронтенда.
+export function sendNotFound(request: FastifyRequest, reply: FastifyReply) {
+  const body: ErrorBody = {
+    code: 'NOT_FOUND',
+    message: `Route ${request.method} ${request.url} not found`,
+  };
+  return reply.status(404).send(body);
+}
 
+// Все ответы 4xx — `{ code, message }`: ошибки обработчиков и валидации из OpenAPI.
+export function registerErrorHandling(app: FastifyInstance) {
   app.setErrorHandler((error: FastifyError | ApiError, request, reply) => {
     if (error instanceof ApiError) {
       const body: ErrorBody = { code: error.code, message: error.message };
