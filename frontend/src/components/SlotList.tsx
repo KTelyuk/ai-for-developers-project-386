@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
+import type { Ref } from 'react';
 import type { Slot } from '@/api';
 import { listSlotsOptions } from '@/api/@tanstack/react-query.gen.ts';
+import { LoadError, Loading } from '@/components/LoadState.tsx';
 import { OWNER_TIME_ZONE_LABEL } from '@/lib/event-types.ts';
 import { formatSlotTime } from '@/lib/schedule.ts';
 
@@ -8,9 +10,16 @@ import { formatSlotTime } from '@/lib/schedule.ts';
 // Нажатие на время передаёт слот странице, и она открывает форму записи.
 type Props = { eventTypeId: string; date: string | undefined; onSelect: (slot: Slot) => void };
 
-export function SlotList({ eventTypeId, date, onSelect }: Props) {
+// `ref` — сам блок: на телефоне «Продолжить» прокручивает к нему и переводит фокус.
+export function SlotList({ ref, ...props }: Props & { ref?: Ref<HTMLElement> }) {
+  const { eventTypeId, date, onSelect } = props;
   return (
-    <section aria-labelledby="choose-time" className="flex flex-col gap-4">
+    <section
+      ref={ref}
+      tabIndex={-1}
+      aria-labelledby="choose-time"
+      className="flex scroll-mt-4 flex-col gap-4 focus-visible:outline-none"
+    >
       <h2 id="choose-time" className="text-xl font-semibold">
         Время
       </h2>
@@ -27,13 +36,9 @@ export function SlotList({ eventTypeId, date, onSelect }: Props) {
 function Slots({ eventTypeId, date, onSelect }: Props & { date: string }) {
   const slots = useQuery(listSlotsOptions({ path: { id: eventTypeId }, query: { date } }));
 
-  if (slots.isPending) return <p className="text-muted-foreground">Загружаем время…</p>;
+  if (slots.isPending) return <Loading>Загружаем время…</Loading>;
   if (slots.isError) {
-    return (
-      <p role="alert" className="text-destructive">
-        Не удалось загрузить время
-      </p>
-    );
+    return <LoadError message="Не удалось загрузить время" onRetry={() => void slots.refetch()} />;
   }
   if (slots.data.length === 0) {
     return <p className="text-muted-foreground">На этот день свободного времени нет</p>;

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { listAvailabilityOptions } from '@/api/@tanstack/react-query.gen.ts';
+import { LoadError, Loading } from '@/components/LoadState.tsx';
 import type { WindowDay } from '@/lib/schedule.ts';
 import { cn } from '@/lib/utils.ts';
 
@@ -31,10 +32,13 @@ export function AvailabilityCalendar({
       <h2 id="choose-day" className="text-xl font-semibold">
         Выберите день
       </h2>
-      {availability.isError ? (
-        <p role="alert" className="text-destructive">
-          Не удалось загрузить календарь
-        </p>
+      {availability.isPending ? (
+        <Loading className="text-sm">Загружаем дни…</Loading>
+      ) : availability.isError ? (
+        <LoadError
+          message="Не удалось загрузить календарь"
+          onRetry={() => void availability.refetch()}
+        />
       ) : null}
       <div aria-hidden="true" className="grid grid-cols-7 gap-0.5 text-center text-xs">
         {WEEKDAYS.map((weekday) => (
