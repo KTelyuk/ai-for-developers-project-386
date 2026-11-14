@@ -1,0 +1,32 @@
+# AGENTS.md
+
+Сервис записи на звонок: владелец публикует типы встреч, гость бронирует свободный слот. Требования и правила — в [README.md](README.md).
+
+## Команды
+
+Окружение и задачи описаны в `mise.toml`. Все команды запускаются из корня.
+
+- `mise install` — поставить Node.js и инструменты, затем `npm ci` (хук mise).
+- `mise run install` — `npm ci` и установка git-хуков hk.
+- `mise run dev` — бэкенд (:3000) и фронтенд (:5173) в фоне через mise daemons. Статус: `mise daemons status`, логи: `mise daemons logs backend`, остановка: `mise daemons stop`.
+- `mise run check` — все проверки: линтеры, типы, тесты. Её же вызывает CI. Перед коммитом она должна проходить.
+- `mise run lint` / `mise run format` — линтеры hk (Oxlint, oxfmt, jactionlint и др.) / автоисправление.
+- `mise run typecheck`, `mise run test`, `mise run build`.
+- Один тест: `npm test -w backend -- test/health.test.ts`.
+- `mise run generate` — после изменения `typespec/main.tsp`.
+
+## Устройство
+
+npm workspaces: `typespec/`, `backend/`, `frontend/`.
+
+- API начинается с контракта: `typespec/main.tsp` → `openapi/openapi.yaml` → SDK в `frontend/src/api/`. Сгенерированное не правится вручную — меняй контракт и запускай `mise run generate`.
+- Бэкенд (Fastify) берёт маршруты и валидацию из `openapi/openapi.yaml` через `fastify-openapi-glue`. Обработчик — метод в `backend/src/handlers.ts` с именем, равным `operationId`. `buildApp()` в `backend/src/app.ts` используется и сервером, и тестами (`app.inject`).
+- Бэкенд запускается Node.js напрямую из `.ts` (type stripping): только стираемый синтаксис, импорты с расширением `.ts`.
+- Фронтенд: React + Vite + shadcn/ui, алиас `@/` → `frontend/src/`. Dev-сервер проксирует `/api` на бэкенд.
+- TypeScript зафиксирован на 6.x: генератор SDK не работает с TypeScript 7.
+
+## Правила
+
+- Коммиты — [Conventional Commits](https://www.conventionalcommits.org/): `feat:`, `fix:`, `test:`, `docs:`, `refactor:`, `chore:`, `ci:`. Проверяет commit-msg хук hk.
+- Не изменять и не переименовывать `.github/workflows/hexlet-check.yml` — это проверка Хекслета.
+- Версии инструментов меняются только в `mise.toml` и `package.json`.

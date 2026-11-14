@@ -1,0 +1,60 @@
+[settings]
+experimental = true
+
+[tools]
+node = "24.22.3"
+hk = "2.12.0"
+pitchfork = "2.34.0"
+jactionlint = "2.6.0"
+"github:agent-sh/agnix" = "0.61.0"
+
+[env]
+_.path = ["{{config_root}}/node_modules/.bin"]
+
+[hooks]
+postinstall = "npm ci"
+
+[tasks.install]
+description = "Install npm dependencies and git hooks"
+run = ["npm ci", "hk install"]
+
+[tasks.generate]
+description = "Compile TypeSpec to OpenAPI and generate the frontend SDK"
+run = ["npm run build -w typespec", "npm run generate -w frontend"]
+
+[tasks.dev]
+description = "Start backend and frontend dev servers in the background"
+run = "mise daemons start"
+
+[tasks.lint]
+description = "Run hk linters on all files"
+run = "hk check --all"
+
+[tasks.format]
+description = "Fix lint and formatting issues"
+run = "hk fix --all"
+
+[tasks.typecheck]
+description = "Type-check all packages"
+run = ["npm run typecheck -w backend", "npm run typecheck -w frontend"]
+
+[tasks.test]
+description = "Run all tests"
+run = "npm test -w backend"
+
+[tasks.build]
+description = "Build the frontend"
+run = "npm run build -w frontend"
+
+[tasks.check]
+description = "Run all checks: lint, typecheck, tests"
+depends = ["lint", "typecheck", "test"]
+
+[daemons.backend]
+run = "npm run dev -w backend"
+ready_port = 3000
+
+[daemons.frontend]
+run = "npm run dev -w frontend"
+ready_output = "Local:"
+depends = ["backend"]
