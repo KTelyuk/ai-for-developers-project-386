@@ -32,6 +32,42 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateEventType'
+  /api/admin/event-types/{id}:
+    patch:
+      operationId: updateEventType
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventType'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      tags:
+        - Admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEventType'
   /api/event-types:
     get:
       operationId: listEventTypes
@@ -156,6 +192,18 @@ components:
           type: string
           enum:
             - ok
+    UpdateEventType:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+        durationMinutes:
+          $ref: '#/components/schemas/DurationMinutes'
 servers:
   - url: /
     description: Same origin
