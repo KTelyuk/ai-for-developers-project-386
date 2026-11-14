@@ -12,6 +12,7 @@
 - `mise run check` — все проверки: линтеры, типы, тесты. Её же вызывает CI. Перед коммитом она должна проходить.
 - `mise run lint` / `mise run format` — линтеры hk (Oxlint, oxfmt, jactionlint и др.) / автоисправление.
 - `mise run typecheck`, `mise run test`, `mise run build`.
+- `mise run e2e` — Playwright против собранного приложения (сначала `mise run build`; браузеры: `npx playwright install chromium webkit`). Не входит в `check`.
 - Один тест: `npm test -w backend -- test/health.test.ts`.
 - `mise run generate` — после изменения `typespec/main.tsp`.
 

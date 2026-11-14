@@ -19,5 +19,14 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
+    // Под нагрузкой на процессор (параллельные проверки) тест бывает дольше стандартных 5 с.
+    testTimeout: 15_000,
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.{ts,tsx}'],
+      // Сгенерированный SDK, компоненты shadcn/ui, точка входа и тестовая обвязка не считаются.
+      exclude: ['src/api/**', 'src/components/ui/**', 'src/main.tsx', 'src/test/**'],
+      thresholds: { lines: 80, functions: 80, branches: 80, statements: 80 },
+    },
   },
 });

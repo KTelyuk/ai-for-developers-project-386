@@ -9,3 +9,8 @@ mise.local.toml
 
 # Рабочие каталоги субагентов Claude Code
 .claude/worktrees/
+coverage/
+
+# Отчёты Playwright
+test-results/
+playwright-report/

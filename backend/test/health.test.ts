@@ -1,8 +1,8 @@
 import { afterAll, describe, expect, it } from 'vitest';
-import { buildApp } from '../src/app.ts';
+import { buildTestApp } from './helpers.ts';
 
 describe('smoke', () => {
-  const app = buildApp();
+  const app = buildTestApp();
 
   afterAll(() => app.close());
 

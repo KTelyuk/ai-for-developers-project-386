@@ -20,8 +20,8 @@ description = "Install npm dependencies and git hooks"
 run = ["npm ci", "hk install"]
 
 [tasks.generate]
-description = "Compile TypeSpec to OpenAPI and generate the frontend SDK"
-run = ["npm run build -w typespec", "npm run generate -w frontend"]
+description = "Compile TypeSpec to OpenAPI, generate backend types and the frontend SDK"
+run = ["npm run build -w typespec", "npm run generate -w backend", "npm run generate -w frontend"]
 
 [tasks.dev]
 description = "Start backend and frontend dev servers in the background"
@@ -37,11 +37,11 @@ run = "hk fix --all"
 
 [tasks.typecheck]
 description = "Type-check all packages"
-run = ["npm run typecheck -w backend", "npm run typecheck -w frontend"]
+run = ["npm run typecheck -w backend", "npm run typecheck -w frontend", "tsc -p e2e"]
 
 [tasks.test]
-description = "Run all tests"
-run = ["npm test -w backend", "npm test -w frontend"]
+description = "Run all tests with coverage thresholds"
+run = ["npm test -w backend -- --coverage", "npm test -w frontend -- --coverage"]
 
 [tasks.build]
 description = "Build the frontend"
@@ -50,6 +50,13 @@ run = "npm run build -w frontend"
 [tasks.check]
 description = "Run all checks: lint, typecheck, tests"
 depends = ["lint", "typecheck", "test"]
+
+# Не входит в check: нужен запущенный сервер. Без E2E_BASE_URL Playwright сам поднимает
+# бэкенд с собранным фронтендом, поэтому сначала собирается фронтенд; в CI E2E_BASE_URL — контейнер.
+[tasks.e2e]
+description = "Build the frontend and run Playwright e2e tests against the app"
+depends = ["build"]
+run = "playwright test --config e2e/playwright.config.ts"
 
 [daemons.backend]
 run = "npm run dev -w backend"
