@@ -9,6 +9,29 @@ export type ApiError = {
     message: string;
 };
 
+export type Booking = {
+    id: string;
+    eventTypeId: string;
+    guestName: string;
+    guestEmail: string;
+    startAt: string;
+    endAt: string;
+    createdAt: string;
+};
+
+export type BookingCreated = {
+    booking: Booking;
+    token: string;
+    link: string;
+};
+
+export type CreateBooking = {
+    eventTypeId: string;
+    startAt: string;
+    guestName: string;
+    guestEmail: string;
+};
+
 export type CreateEventType = {
     title: string;
     description?: string;
@@ -96,6 +119,39 @@ export type UpdateEventTypeResponses = {
 };
 
 export type UpdateEventTypeResponse = UpdateEventTypeResponses[keyof UpdateEventTypeResponses];
+
+export type CreateBookingData = {
+    body: CreateBooking;
+    path?: never;
+    query?: never;
+    url: '/api/bookings';
+};
+
+export type CreateBookingErrors = {
+    /**
+     * The server could not understand the request due to invalid syntax.
+     */
+    400: ApiError;
+    /**
+     * The server cannot find the requested resource.
+     */
+    404: ApiError;
+    /**
+     * The request conflicts with the current state of the server.
+     */
+    409: ApiError;
+};
+
+export type CreateBookingError = CreateBookingErrors[keyof CreateBookingErrors];
+
+export type CreateBookingResponses = {
+    /**
+     * The request has succeeded and a new resource has been created as a result.
+     */
+    201: BookingCreated;
+};
+
+export type CreateBookingResponse = CreateBookingResponses[keyof CreateBookingResponses];
 
 export type ListEventTypesData = {
     body?: never;
