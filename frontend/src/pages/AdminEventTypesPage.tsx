@@ -10,6 +10,7 @@ import {
 } from '@/api/@tanstack/react-query.gen.ts';
 import { AdminNav } from '@/components/AdminNav.tsx';
 import { EventTypeForm } from '@/components/EventTypeForm.tsx';
+import { LoadError, Loading } from '@/components/LoadState.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { formatDuration } from '@/lib/event-types.ts';
 
@@ -101,11 +102,12 @@ export function AdminEventTypesPage() {
             Опубликованные
           </h2>
           {eventTypes.isPending ? (
-            <p className="text-muted-foreground">Загружаем…</p>
+            <Loading>Загружаем…</Loading>
           ) : eventTypes.isError ? (
-            <p role="alert" className="text-destructive">
-              Не удалось загрузить типы встреч
-            </p>
+            <LoadError
+              message="Не удалось загрузить типы встреч"
+              onRetry={() => void eventTypes.refetch()}
+            />
           ) : eventTypes.data.length === 0 ? (
             <p className="text-muted-foreground">Типов встреч пока нет</p>
           ) : (

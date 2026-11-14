@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Clock, Globe } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router';
 import type { BookingCreated, EventType, Slot } from '@/api';
@@ -7,11 +7,13 @@ import { listEventTypesOptions } from '@/api/@tanstack/react-query.gen.ts';
 import { AvailabilityCalendar } from '@/components/AvailabilityCalendar.tsx';
 import { BookingConfirmation } from '@/components/BookingConfirmation.tsx';
 import { BookingForm } from '@/components/BookingForm.tsx';
+import { LoadError, Loading } from '@/components/LoadState.tsx';
 import { SlotList } from '@/components/SlotList.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { OWNER_TIME_ZONE_LABEL, formatDuration } from '@/lib/event-types.ts';
 import type { BookingFormValues } from '@/lib/bookings.ts';
 import { windowDays } from '@/lib/schedule.ts';
+import { cn } from '@/lib/utils.ts';
 
 // Выбор хранится в адресе: `/book?eventType=<id>&date=YYYY-MM-DD`.
 const EVENT_TYPE_PARAM = 'eventType';
@@ -59,6 +61,9 @@ export function BookPage() {
   // Введённые имя и email переживают конфликт: форма для другого времени открывается с ними.
   const [guest, setGuest] = useState<BookingFormValues>();
   const chosenSlot = slot && slot.startAt.slice(0, 10) === selectedDate ? slot : undefined;
+  const timeStep = useRef<HTMLElement>(null);
+  // Закреплённые внизу кнопки шагов не должны закрывать конец страницы на телефоне.
+  const withSteps = selected !== undefined && created === undefined;
 
   function chooseSlot(next: Slot | undefined, message?: string) {
     setSlot(next);
@@ -66,14 +71,20 @@ export function BookPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-8 sm:py-12">
+    <div
+      className={cn(
+        'mx-auto flex max-w-5xl flex-col gap-8 px-4 pt-8 sm:pt-12',
+        withSteps ? 'pb-28 md:pb-12' : 'pb-8 sm:pb-12',
+      )}
+    >
       <h1 className="text-3xl font-bold tracking-tight">Бронирование</h1>
       {eventTypes.isPending ? (
-        <p className="text-muted-foreground">Загружаем типы встреч…</p>
+        <Loading>Загружаем типы встреч…</Loading>
       ) : eventTypes.isError ? (
-        <p role="alert" className="text-destructive">
-          Не удалось загрузить типы встреч
-        </p>
+        <LoadError
+          message="Не удалось загрузить типы встреч"
+          onRetry={() => void eventTypes.refetch()}
+        />
       ) : eventTypes.data.length === 0 ? (
         <div className="flex flex-col items-start gap-4">
           <p className="text-lg font-medium">Записаться пока нельзя</p>
@@ -88,11 +99,16 @@ export function BookPage() {
         <BookingConfirmation eventType={selected} created={created} />
       ) : selected ? (
         <div className="flex flex-col gap-6">
-          <div>
+          {/* На телефоне шаги листаются кнопками, закреплёнными внизу экрана; с планшета «Назад» стоит
+              над блоками, а «Продолжить» не нужна — календарь и время видны рядом. */}
+          <nav
+            aria-label="Шаги записи"
+            className="fixed inset-x-0 bottom-0 z-10 flex gap-2 border-t bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:static md:border-0 md:bg-transparent md:p-0"
+          >
             <Button
               variant="outline"
               size="lg"
-              className="h-11 px-6 text-base"
+              className="h-11 flex-1 px-6 text-base md:flex-none"
               onClick={() => {
                 chooseSlot(undefined);
                 setSearchParams({});
@@ -100,7 +116,21 @@ export function BookPage() {
             >
               Назад
             </Button>
-          </div>
+            {chosenSlot ? null : (
+              <Button
+                size="lg"
+                className="h-11 flex-1 px-6 text-base md:hidden"
+                disabled={!selectedDate}
+                onClick={() => {
+                  const time = timeStep.current;
+                  time?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+                  time?.focus({ preventScroll: true });
+                }}
+              >
+                Продолжить
+              </Button>
+            )}
+          </nav>
           {notice ? (
             <p role="alert" className="text-destructive">
               {notice}
@@ -136,6 +166,7 @@ export function BookPage() {
                   }}
                 />
                 <SlotList
+                  ref={timeStep}
                   eventTypeId={selected.id}
                   date={selectedDate}
                   onSelect={(next) => chooseSlot(next)}
