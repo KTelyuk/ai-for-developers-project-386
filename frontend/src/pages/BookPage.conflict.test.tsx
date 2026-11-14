@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw/http';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CreateBooking, Slot } from '@/api';
+import { mockAvailabilityApi } from '@/test/availability.ts';
 import { consultation, mockEventTypesApi } from '@/test/event-types.ts';
 import { server } from '@/test/msw.ts';
 import { renderAt } from '@/test/render.tsx';
@@ -23,10 +24,12 @@ function slot(start: string, end: string): Slot {
 
 const DAY = `/book?eventType=${consultation.id}&date=2026-11-17`;
 
-// Другой гость успевает занять первую бронь гостя: сервер убирает время из слотов и отвечает 409.
+// Другой гость успевает занять время первой брони: сервер убирает его из слотов и счётчиков
+// и отвечает 409.
 function mockRaceLostApi(slots: Slot[]) {
   let free = [...slots];
   const created: CreateBooking[] = [];
+  mockAvailabilityApi(() => ({ '2026-11-17': free.length }));
   server.use(
     http.get('*/api/event-types/:id/slots', () => HttpResponse.json(free)),
     http.post('*/api/bookings', async ({ request }) => {
@@ -63,7 +66,7 @@ async function chooseTime(user: ReturnType<typeof userEvent.setup>, time: string
 }
 
 describe('страница бронирования: время успели занять', () => {
-  it('занятое время пропадает, имя и email сохраняются для другого времени', async () => {
+  it('занятое время пропадает из слотов и счётчика, имя и email сохраняются для другого времени', async () => {
     const user = userEvent.setup();
     mockEventTypesApi([consultation]);
     const { created } = mockRaceLostApi([slot('09:00', '10:00'), slot('10:00', '11:00')]);
@@ -80,6 +83,10 @@ describe('страница бронирования: время успели з�
     await vi.waitFor(() =>
       expect(within(list).queryByRole('button', { name: '09:00' })).not.toBeInTheDocument(),
     );
+
+    expect(
+      await screen.findByRole('button', { name: /17 ноября — свободно 1/ }),
+    ).toBeInTheDocument();
 
     await user.click(within(list).getByRole('button', { name: '10:00' }));
     expect(screen.getByLabelText('Имя')).toHaveValue('Анна');
