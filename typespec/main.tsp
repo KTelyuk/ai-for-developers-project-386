@@ -105,6 +105,22 @@ interface EventTypes {
   get(@path id: string): EventType | NotFoundError;
 }
 
+// Свободный слот: моменты ISO 8601 со смещением Алматы `+05:00`.
+model Slot {
+  startAt: offsetDateTime;
+  endAt: offsetDateTime;
+}
+
+@route("/api/event-types/{id}/slots")
+@tag("Slots")
+interface Slots {
+  // Свободные слоты на день `YYYY-MM-DD` по Алматы. Выходной — пустой список;
+  // дата вне окна записи или в неверном формате — 400.
+  @get
+  @operationId("listSlots")
+  list(@path id: string, @query date: plainDate): Slot[] | ValidationError | NotFoundError;
+}
+
 @route("/api/admin/event-types")
 @tag("Admin")
 interface AdminEventTypes {

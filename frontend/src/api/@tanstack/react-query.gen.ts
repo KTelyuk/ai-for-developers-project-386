@@ -3,8 +3,8 @@
 import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { createEventType, getEventType, getHealth, listEventTypes, type Options, updateEventType } from '../sdk.gen';
-import type { CreateEventTypeData, CreateEventTypeError, CreateEventTypeResponse, GetEventTypeData, GetEventTypeError, GetEventTypeResponse, GetHealthData, GetHealthResponse, ListEventTypesData, ListEventTypesResponse, UpdateEventTypeData, UpdateEventTypeError, UpdateEventTypeResponse } from '../types.gen';
+import { createEventType, getEventType, getHealth, listEventTypes, listSlots, type Options, updateEventType } from '../sdk.gen';
+import type { CreateEventTypeData, CreateEventTypeError, CreateEventTypeResponse, GetEventTypeData, GetEventTypeError, GetEventTypeResponse, GetHealthData, GetHealthResponse, ListEventTypesData, ListEventTypesResponse, ListSlotsData, ListSlotsError, ListSlotsResponse, UpdateEventTypeData, UpdateEventTypeError, UpdateEventTypeResponse } from '../types.gen';
 
 export const createEventTypeMutation = (options?: Partial<Options<CreateEventTypeData>>): UseMutationOptions<CreateEventTypeResponse, CreateEventTypeError, Options<CreateEventTypeData>> => {
     const mutationOptions: UseMutationOptions<CreateEventTypeResponse, CreateEventTypeError, Options<CreateEventTypeData>> = {
@@ -95,6 +95,21 @@ export const getEventTypeOptions = (options: Options<GetEventTypeData>) => query
         return data;
     },
     queryKey: getEventTypeQueryKey(options)
+});
+
+export const listSlotsQueryKey = (options: Options<ListSlotsData>) => createQueryKey('listSlots', options);
+
+export const listSlotsOptions = (options: Options<ListSlotsData>) => queryOptions<ListSlotsResponse, ListSlotsError, ListSlotsResponse, ReturnType<typeof listSlotsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listSlots({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listSlotsQueryKey(options)
 });
 
 export const getHealthQueryKey = (options?: Options<GetHealthData>) => createQueryKey('getHealth', options);

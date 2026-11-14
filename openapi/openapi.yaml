@@ -5,6 +5,7 @@ info:
 tags:
   - name: System
   - name: Event types
+  - name: Slots
   - name: Admin
 paths:
   /api/admin/event-types:
@@ -107,6 +108,45 @@ paths:
                 $ref: '#/components/schemas/ApiError'
       tags:
         - Event types
+  /api/event-types/{id}/slots:
+    get:
+      operationId: listSlots
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Slot'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      tags:
+        - Slots
   /api/health:
     get:
       operationId: getHealth
@@ -192,6 +232,18 @@ components:
           type: string
           enum:
             - ok
+    Slot:
+      type: object
+      required:
+        - startAt
+        - endAt
+      properties:
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
     UpdateEventType:
       type: object
       properties:

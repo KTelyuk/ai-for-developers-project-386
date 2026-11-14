@@ -1,8 +1,15 @@
 import { randomUUID } from 'node:crypto';
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import type { CreateEventType, EventType, HealthStatus, UpdateEventType } from './api/types.gen.ts';
+import type {
+  CreateEventType,
+  EventType,
+  HealthStatus,
+  Slot,
+  UpdateEventType,
+} from './api/types.gen.ts';
 import type { Clock } from './clock.ts';
 import { ApiError } from './errors.ts';
+import { daySlots, isInWindow } from './schedule.ts';
 import type { Store } from './store.ts';
 
 export type Deps = { clock: Clock; store: Store };
@@ -18,7 +25,7 @@ function normalizeTitle(title: string): string {
 
 // Обработчики по operationId из openapi/openapi.yaml. Зависимости приходят из buildApp.
 // Форму тела, длины полей и список длительностей уже проверил fastify-openapi-glue по контракту.
-export function createHandlers({ store }: Deps) {
+export function createHandlers({ clock, store }: Deps) {
   function findEventType(id: string): EventType {
     const eventType = store.eventTypes.get(id);
     if (!eventType) throw new ApiError(404, 'NOT_FOUND', 'Тип встречи не найден');
@@ -36,6 +43,19 @@ export function createHandlers({ store }: Deps) {
 
     getEventType(request: FastifyRequest<{ Params: { id: string } }>): EventType {
       return findEventType(request.params.id);
+    },
+
+    listSlots(
+      request: FastifyRequest<{ Params: { id: string }; Querystring: { date: string } }>,
+    ): Slot[] {
+      const { durationMinutes } = findEventType(request.params.id);
+      const { date } = request.query;
+      const now = clock();
+      // Формат даты проверил контракт; здесь — что день существует и попадает в окно записи.
+      if (!isInWindow(date, now)) {
+        throw new ApiError(400, 'VALIDATION_ERROR', 'День вне окна записи');
+      }
+      return daySlots({ date, durationMinutes, bookings: store.bookings.list(), now });
     },
 
     createEventType(

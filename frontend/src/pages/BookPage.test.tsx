@@ -34,10 +34,7 @@ describe('страница бронирования: выбор типа вст�
     expect(info).toHaveTextContent('Подробный разбор вашей задачи');
     expect(info).toHaveTextContent('60 мин');
     expect(info).toHaveTextContent('Asia/Almaty (UTC+05:00)');
-    expect(screen.getByRole('button', { name: /Консультация/ })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
+    expect(screen.queryByRole('list', { name: 'Типы встреч' })).not.toBeInTheDocument();
   });
 
   it('открывает выбранный тип встречи по ссылке', async () => {

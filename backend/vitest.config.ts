@@ -8,7 +8,14 @@ export default defineConfig({
       include: ['src/**/*.ts'],
       // Точка входа только слушает порт; всё остальное собирается через buildApp. Типы из контракта сгенерированы.
       exclude: ['src/server.ts', 'src/api/**'],
-      thresholds: { lines: 80, functions: 80, branches: 80, statements: 80 },
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 80,
+        statements: 80,
+        // Правила расписания и пересечений покрываются полностью (docs/spec.md, «Testing Decisions»).
+        'src/{schedule,overlap}.ts': { lines: 100, functions: 100, branches: 100, statements: 100 },
+      },
     },
   },
 });
