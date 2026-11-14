@@ -4,12 +4,15 @@ import { Button } from '@/components/ui/button.tsx';
 const steps = [
   {
     title: 'Выберите тип встречи',
-    text: 'Например, короткое знакомство или подробная консультация.',
+    description: 'Например, короткое знакомство или подробная консультация.',
   },
-  { title: 'Выберите день и время', text: 'Свободные слоты на ближайшие 14 дней, по будням.' },
+  {
+    title: 'Выберите день и время',
+    description: 'Свободные слоты на ближайшие 14 дней, по будням.',
+  },
   {
     title: 'Оставьте имя и email',
-    text: 'И получите ссылку на запись — по ней её можно отменить.',
+    description: 'И получите ссылку на запись — по ней её можно отменить.',
   },
 ];
 
@@ -40,7 +43,7 @@ export function HomePage() {
                 {index + 1}
               </span>
               <h3 className="font-medium">{step.title}</h3>
-              <p className="text-sm text-muted-foreground">{step.text}</p>
+              <p className="text-sm text-muted-foreground">{step.description}</p>
             </li>
           ))}
         </ol>
