@@ -4,7 +4,7 @@ import { Clock, Globe } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router';
 import type { EventType } from '@/api';
 import { listEventTypesOptions } from '@/api/@tanstack/react-query.gen.ts';
-import { DayPicker } from '@/components/DayPicker.tsx';
+import { AvailabilityCalendar } from '@/components/AvailabilityCalendar.tsx';
 import { SlotList } from '@/components/SlotList.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { OWNER_TIME_ZONE_LABEL, formatDuration } from '@/lib/event-types.ts';
@@ -84,7 +84,8 @@ export function BookPage() {
             <div className="md:col-span-2 lg:col-span-1">
               <EventTypeInfo eventType={selected} />
             </div>
-            <DayPicker
+            <AvailabilityCalendar
+              eventTypeId={selected.id}
               days={days}
               selected={selectedDate}
               onSelect={(date) =>

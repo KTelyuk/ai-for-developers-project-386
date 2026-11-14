@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type {
   CreateEventType,
+  DayAvailability,
   EventType,
   HealthStatus,
   Slot,
@@ -9,7 +10,7 @@ import type {
 } from './api/types.gen.ts';
 import type { Clock } from './clock.ts';
 import { ApiError } from './errors.ts';
-import { daySlots, isInWindow } from './schedule.ts';
+import { daySlots, isInWindow, rangeDates } from './schedule.ts';
 import type { Store } from './store.ts';
 
 export type Deps = { clock: Clock; store: Store };
@@ -56,6 +57,26 @@ export function createHandlers({ clock, store }: Deps) {
         throw new ApiError(400, 'VALIDATION_ERROR', 'День вне окна записи');
       }
       return daySlots({ date, durationMinutes, bookings: store.bookings.list(), now });
+    },
+
+    listAvailability(
+      request: FastifyRequest<{
+        Params: { id: string };
+        Querystring: { from: string; to: string };
+      }>,
+    ): DayAvailability[] {
+      const { durationMinutes } = findEventType(request.params.id);
+      const dates = rangeDates(request.query.from, request.query.to);
+      if (!dates) {
+        throw new ApiError(400, 'VALIDATION_ERROR', 'Неверный диапазон дней');
+      }
+      const now = clock();
+      const bookings = store.bookings.list();
+      // Тот же расчёт, что и у слотов дня: счётчик всегда совпадает с их числом.
+      return dates.map((date) => ({
+        date,
+        freeSlots: daySlots({ date, durationMinutes, bookings, now }).length,
+      }));
     },
 
     createEventType(

@@ -60,6 +60,23 @@ export function isInWindow(date: string, now: Date): boolean {
   return windowDates(now).includes(date);
 }
 
+// `2026-11-31` разбирается как 1 декабря: дата существует, только если переживает обратное
+// преобразование.
+function isExistingDate(date: string, midnight: number): boolean {
+  return Number.isFinite(midnight) && toOwnerDate(midnight) === date;
+}
+
+// Дни `from`–`to` включительно. Несуществующая дата, конец раньше начала или диапазон длиннее
+// окна записи — `undefined`.
+export function rangeDates(from: string, to: string): string[] | undefined {
+  const start = dayStartMs(from);
+  const end = dayStartMs(to);
+  if (!isExistingDate(from, start) || !isExistingDate(to, end)) return undefined;
+  const length = (end - start) / DAY_MS + 1;
+  if (length < 1 || length > WINDOW_DAYS) return undefined;
+  return Array.from({ length }, (_, index) => toOwnerDate(start + index * DAY_MS));
+}
+
 // Свободные слоты дня: будни, рабочие часы без обеда, шаг 15 минут, длительность типа встречи.
 // Слот недоступен, если его начало наступило (начало ≤ сейчас) или он пересекается с записью.
 // Дни вне окна и выходные — пустой список.
