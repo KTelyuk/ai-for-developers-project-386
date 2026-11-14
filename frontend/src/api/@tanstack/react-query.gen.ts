@@ -3,13 +3,27 @@
 import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { createEventType, getEventType, getHealth, listEventTypes, type Options } from '../sdk.gen';
-import type { CreateEventTypeData, CreateEventTypeError, CreateEventTypeResponse, GetEventTypeData, GetEventTypeError, GetEventTypeResponse, GetHealthData, GetHealthResponse, ListEventTypesData, ListEventTypesResponse } from '../types.gen';
+import { createEventType, getEventType, getHealth, listEventTypes, type Options, updateEventType } from '../sdk.gen';
+import type { CreateEventTypeData, CreateEventTypeError, CreateEventTypeResponse, GetEventTypeData, GetEventTypeError, GetEventTypeResponse, GetHealthData, GetHealthResponse, ListEventTypesData, ListEventTypesResponse, UpdateEventTypeData, UpdateEventTypeError, UpdateEventTypeResponse } from '../types.gen';
 
 export const createEventTypeMutation = (options?: Partial<Options<CreateEventTypeData>>): UseMutationOptions<CreateEventTypeResponse, CreateEventTypeError, Options<CreateEventTypeData>> => {
     const mutationOptions: UseMutationOptions<CreateEventTypeResponse, CreateEventTypeError, Options<CreateEventTypeData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await createEventType({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const updateEventTypeMutation = (options?: Partial<Options<UpdateEventTypeData>>): UseMutationOptions<UpdateEventTypeResponse, UpdateEventTypeError, Options<UpdateEventTypeData>> => {
+    const mutationOptions: UseMutationOptions<UpdateEventTypeResponse, UpdateEventTypeError, Options<UpdateEventTypeData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updateEventType({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

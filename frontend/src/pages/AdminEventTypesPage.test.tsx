@@ -122,6 +122,94 @@ describe('админка: типы встреч', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Название не может быть пустым');
   });
 
+  it('форма редактирования заполнена текущими значениями', async () => {
+    const user = userEvent.setup();
+    mockEventTypesApi([intro, consultation]);
+    renderAt(PATH);
+
+    const [, item] = within(await eventTypesList()).getAllByRole('listitem');
+    await user.click(within(item).getByRole('button', { name: 'Изменить' }));
+
+    expect(within(item).getByLabelText('Название')).toHaveValue('Консультация');
+    expect(within(item).getByLabelText('Описание')).toHaveValue('Подробный разбор вашей задачи');
+    expect(within(item).getByLabelText('Длительность')).toHaveDisplayValue('60 мин');
+  });
+
+  it('сохраняет изменения, и список показывает новые данные', async () => {
+    const user = userEvent.setup();
+    const { updated } = mockEventTypesApi([intro]);
+    renderAt(PATH);
+
+    const [item] = within(await eventTypesList()).getAllByRole('listitem');
+    await user.click(within(item).getByRole('button', { name: 'Изменить' }));
+    const title = within(item).getByLabelText('Название');
+    await user.clear(title);
+    await user.type(title, 'Первая встреча');
+    await user.selectOptions(within(item).getByLabelText('Длительность'), '30 мин');
+    await user.click(within(item).getByRole('button', { name: 'Сохранить' }));
+
+    const list = await eventTypesList();
+    expect(await within(list).findByText('Первая встреча')).toBeInTheDocument();
+    expect(within(list).getByText('30 мин')).toBeInTheDocument();
+    expect(within(list).queryByRole('button', { name: 'Сохранить' })).not.toBeInTheDocument();
+    expect(updated).toEqual([
+      {
+        id: intro.id,
+        body: {
+          title: 'Первая встреча',
+          description: 'Короткий звонок, чтобы познакомиться',
+          durationMinutes: 30,
+        },
+      },
+    ]);
+  });
+
+  it('отмена закрывает форму без сохранения', async () => {
+    const user = userEvent.setup();
+    const { updated } = mockEventTypesApi([intro]);
+    renderAt(PATH);
+
+    const [item] = within(await eventTypesList()).getAllByRole('listitem');
+    await user.click(within(item).getByRole('button', { name: 'Изменить' }));
+    await user.type(within(item).getByLabelText('Название'), ' 2');
+    await user.click(within(item).getByRole('button', { name: 'Отмена' }));
+
+    expect(within(item).queryByLabelText('Название')).not.toBeInTheDocument();
+    expect(item).toHaveTextContent('Знакомство');
+    expect(updated).toEqual([]);
+  });
+
+  it('при редактировании не сохраняет пустое название', async () => {
+    const user = userEvent.setup();
+    const { updated } = mockEventTypesApi([intro]);
+    renderAt(PATH);
+
+    const [item] = within(await eventTypesList()).getAllByRole('listitem');
+    await user.click(within(item).getByRole('button', { name: 'Изменить' }));
+    await user.clear(within(item).getByLabelText('Название'));
+    await user.click(within(item).getByRole('button', { name: 'Сохранить' }));
+
+    expect(within(item).getByLabelText('Название')).toHaveAccessibleDescription('Введите название');
+    expect(updated).toEqual([]);
+  });
+
+  it('показывает ошибку сервера, если изменить не удалось', async () => {
+    const user = userEvent.setup();
+    mockEventTypesApi([intro]);
+    server.use(
+      http.patch('*/api/admin/event-types/:id', () =>
+        HttpResponse.json({ code: 'NOT_FOUND', message: 'Тип встречи не найден' }, { status: 404 }),
+      ),
+    );
+    renderAt(PATH);
+
+    const [item] = within(await eventTypesList()).getAllByRole('listitem');
+    await user.click(within(item).getByRole('button', { name: 'Изменить' }));
+    await user.click(within(item).getByRole('button', { name: 'Сохранить' }));
+
+    expect(await within(item).findByRole('alert')).toHaveTextContent('Тип встречи не найден');
+  });
+
   it('сообщает, если список не загрузился', async () => {
     server.use(http.get('*/api/event-types', () => HttpResponse.json({}, { status: 500 })));
     renderAt(PATH);

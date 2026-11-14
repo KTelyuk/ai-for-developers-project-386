@@ -1,16 +1,85 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ApiError } from '@/api';
+import { useState } from 'react';
+import type { ApiError, EventType } from '@/api';
 import {
   createEventTypeMutation,
+  getEventTypeQueryKey,
   listEventTypesOptions,
   listEventTypesQueryKey,
+  updateEventTypeMutation,
 } from '@/api/@tanstack/react-query.gen.ts';
 import { EventTypeForm } from '@/components/EventTypeForm.tsx';
+import { Button } from '@/components/ui/button.tsx';
 import { formatDuration } from '@/lib/event-types.ts';
 
 function errorMessage(error: unknown) {
   const message = (error as Partial<ApiError> | null)?.message;
   return typeof message === 'string' && message ? message : 'Не удалось сохранить тип встречи';
+}
+
+// Тип встречи в списке владельца: просмотр или форма редактирования на месте.
+function EventTypeItem({ eventType }: { eventType: EventType }) {
+  const queryClient = useQueryClient();
+  const [editing, setEditing] = useState(false);
+  const update = useMutation({
+    ...updateEventTypeMutation(),
+    // Новые данные сразу видны и в списке владельца, и у гостя.
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: listEventTypesQueryKey() }),
+        queryClient.invalidateQueries({
+          queryKey: getEventTypeQueryKey({ path: { id: eventType.id } }),
+        }),
+      ]),
+  });
+
+  if (editing) {
+    return (
+      <li className="rounded-xl border p-4">
+        <EventTypeForm
+          submitLabel="Сохранить"
+          defaultValues={eventType}
+          pending={update.isPending}
+          serverError={update.isError ? errorMessage(update.error) : undefined}
+          onCancel={() => {
+            update.reset();
+            setEditing(false);
+          }}
+          onSubmit={async (body) => {
+            try {
+              await update.mutateAsync({ path: { id: eventType.id }, body });
+              setEditing(false);
+              return true;
+            } catch {
+              return false;
+            }
+          }}
+        />
+      </li>
+    );
+  }
+
+  return (
+    <li className="flex flex-col gap-1 rounded-xl border p-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h3 className="font-medium break-words">{eventType.title}</h3>
+        <span className="text-sm text-muted-foreground">
+          {formatDuration(eventType.durationMinutes)}
+        </span>
+      </div>
+      {eventType.description ? (
+        <p className="text-sm break-words text-muted-foreground">{eventType.description}</p>
+      ) : null}
+      <Button
+        type="button"
+        variant="outline"
+        className="mt-2 h-11 self-start px-4"
+        onClick={() => setEditing(true)}
+      >
+        Изменить
+      </Button>
+    </li>
+  );
 }
 
 export function AdminEventTypesPage() {
@@ -40,19 +109,7 @@ export function AdminEventTypesPage() {
           ) : (
             <ul aria-label="Типы встреч" className="flex flex-col gap-3">
               {eventTypes.data.map((eventType) => (
-                <li key={eventType.id} className="flex flex-col gap-1 rounded-xl border p-4">
-                  <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <h3 className="font-medium break-words">{eventType.title}</h3>
-                    <span className="text-sm text-muted-foreground">
-                      {formatDuration(eventType.durationMinutes)}
-                    </span>
-                  </div>
-                  {eventType.description ? (
-                    <p className="text-sm break-words text-muted-foreground">
-                      {eventType.description}
-                    </p>
-                  ) : null}
-                </li>
+                <EventTypeItem key={eventType.id} eventType={eventType} />
               ))}
             </ul>
           )}

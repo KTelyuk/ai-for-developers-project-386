@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useId } from 'react';
 import { useForm } from 'react-hook-form';
-import type { CreateEventType, DurationMinutes } from '@/api';
+import type { CreateEventType, DurationMinutes, EventType } from '@/api';
 import { Button } from '@/components/ui/button.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { Label } from '@/components/ui/label.tsx';
@@ -19,17 +19,38 @@ type Props = {
   pending: boolean;
   // Сообщение сервера, если сохранить не удалось.
   serverError?: string;
-  // Возвращает true, если сохранено: тогда форма очищается.
+  // Текущие значения при редактировании; без них форма пустая, длительность 30 минут.
+  defaultValues?: EventType;
+  // Возвращает true, если сохранено: тогда форма возвращается к начальным значениям.
   onSubmit: (values: CreateEventType) => Promise<boolean>;
+  // Если задан, рядом с кнопкой сохранения появляется «Отмена».
+  onCancel?: () => void;
 };
 
 const EMPTY: EventTypeFormInput = { title: '', description: '', durationMinutes: '30' };
 
+function toFormInput(eventType?: EventType): EventTypeFormInput {
+  if (!eventType) return EMPTY;
+  return {
+    title: eventType.title,
+    description: eventType.description,
+    durationMinutes: String(eventType.durationMinutes) as EventTypeFormInput['durationMinutes'],
+  };
+}
+
 const selectClassName =
   'h-11 w-full rounded-lg border border-input bg-transparent px-2.5 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30';
 
-export function EventTypeForm({ submitLabel, pending, serverError, onSubmit }: Props) {
+export function EventTypeForm({
+  submitLabel,
+  pending,
+  serverError,
+  defaultValues,
+  onSubmit,
+  onCancel,
+}: Props) {
   const id = useId();
+  const initial = toFormInput(defaultValues);
   const {
     register,
     handleSubmit,
@@ -37,7 +58,7 @@ export function EventTypeForm({ submitLabel, pending, serverError, onSubmit }: P
     formState: { errors },
   } = useForm<EventTypeFormInput, unknown, EventTypeFormValues>({
     resolver: zodResolver(eventTypeFormSchema),
-    defaultValues: EMPTY,
+    defaultValues: initial,
   });
 
   const submit = handleSubmit(async (values) => {
@@ -46,7 +67,7 @@ export function EventTypeForm({ submitLabel, pending, serverError, onSubmit }: P
       description: values.description,
       durationMinutes: Number(values.durationMinutes) as DurationMinutes,
     });
-    if (saved) reset(EMPTY);
+    if (saved) reset(initial);
   });
 
   const fieldError = (name: keyof EventTypeFormInput) => {
@@ -103,9 +124,22 @@ export function EventTypeForm({ submitLabel, pending, serverError, onSubmit }: P
           {serverError}
         </p>
       ) : null}
-      <Button type="submit" size="lg" className="h-11 self-start px-6" disabled={pending}>
-        {submitLabel}
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button type="submit" size="lg" className="h-11 px-6" disabled={pending}>
+          {submitLabel}
+        </Button>
+        {onCancel ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            className="h-11 px-6"
+            onClick={onCancel}
+          >
+            Отмена
+          </Button>
+        ) : null}
+      </div>
     </form>
   );
 }
