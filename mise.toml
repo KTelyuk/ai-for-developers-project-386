@@ -20,8 +20,8 @@ description = "Install npm dependencies and git hooks"
 run = ["npm ci", "hk install"]
 
 [tasks.generate]
-description = "Compile TypeSpec to OpenAPI and generate the frontend SDK"
-run = ["npm run build -w typespec", "npm run generate -w frontend"]
+description = "Compile TypeSpec to OpenAPI, generate backend types and the frontend SDK"
+run = ["npm run build -w typespec", "npm run generate -w backend", "npm run generate -w frontend"]
 
 [tasks.dev]
 description = "Start backend and frontend dev servers in the background"

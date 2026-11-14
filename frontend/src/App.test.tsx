@@ -1,6 +1,7 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
+import { intro, mockEventTypesApi } from '@/test/event-types.ts';
 import { startedRequests } from '@/test/msw.ts';
 import { renderAt } from '@/test/render.tsx';
 
@@ -51,17 +52,23 @@ describe('главная', () => {
 describe('страница бронирования', () => {
   it('открывается по кнопке «Записаться» и возвращает на главную', async () => {
     const user = userEvent.setup();
+    mockEventTypesApi();
     renderAt('/');
 
     await user.click(screen.getByRole('link', { name: 'Записаться' }));
-    expect(screen.getByText('Скоро здесь можно будет записаться')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Бронирование');
 
-    await user.click(screen.getByRole('link', { name: 'На главную' }));
+    await user.click(await screen.findByRole('link', { name: 'На главную' }));
     expect(screen.getByRole('link', { name: 'Записаться' })).toBeInTheDocument();
   });
 
-  it('не содержит ссылок на /admin', () => {
+  it('не содержит ссылок на /admin ни до, ни после выбора типа встречи', async () => {
+    const user = userEvent.setup();
+    mockEventTypesApi([intro]);
     renderAt('/book');
+
+    await user.click(await screen.findByRole('button', { name: /Знакомство/ }));
+    await screen.findByRole('region', { name: 'Информация' });
     expect(adminLinks()).toEqual([]);
   });
 });

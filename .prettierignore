@@ -1,6 +1,7 @@
 package-lock.json
 openapi/
 frontend/src/api/
+backend/src/api/
 frontend/src/components/ui/
 **/dist/
 .github/workflows/hexlet-check.yml

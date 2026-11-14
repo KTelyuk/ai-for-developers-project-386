@@ -4,9 +4,99 @@ export type ClientOptions = {
     baseUrl: `${string}://${string}` | (string & {});
 };
 
+export type ApiError = {
+    code: ErrorCode;
+    message: string;
+};
+
+export type CreateEventType = {
+    title: string;
+    description?: string;
+    durationMinutes: DurationMinutes;
+};
+
+export type DurationMinutes = 15 | 30 | 45 | 60;
+
+export type ErrorCode = 'VALIDATION_ERROR' | 'NOT_FOUND' | 'INVALID_TOKEN' | 'SLOT_TAKEN' | 'ALREADY_STARTED' | 'SLOT_UNAVAILABLE';
+
+export type EventType = {
+    id: string;
+    title: string;
+    description: string;
+    durationMinutes: DurationMinutes;
+};
+
 export type HealthStatus = {
     status: 'ok';
 };
+
+export type CreateEventTypeData = {
+    body: CreateEventType;
+    path?: never;
+    query?: never;
+    url: '/api/admin/event-types';
+};
+
+export type CreateEventTypeErrors = {
+    /**
+     * The server could not understand the request due to invalid syntax.
+     */
+    400: ApiError;
+};
+
+export type CreateEventTypeError = CreateEventTypeErrors[keyof CreateEventTypeErrors];
+
+export type CreateEventTypeResponses = {
+    /**
+     * The request has succeeded and a new resource has been created as a result.
+     */
+    201: EventType;
+};
+
+export type CreateEventTypeResponse = CreateEventTypeResponses[keyof CreateEventTypeResponses];
+
+export type ListEventTypesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/event-types';
+};
+
+export type ListEventTypesResponses = {
+    /**
+     * The request has succeeded.
+     */
+    200: Array<EventType>;
+};
+
+export type ListEventTypesResponse = ListEventTypesResponses[keyof ListEventTypesResponses];
+
+export type GetEventTypeData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/event-types/{id}';
+};
+
+export type GetEventTypeErrors = {
+    /**
+     * The server cannot find the requested resource.
+     */
+    404: ApiError;
+};
+
+export type GetEventTypeError = GetEventTypeErrors[keyof GetEventTypeErrors];
+
+export type GetEventTypeResponses = {
+    /**
+     * The request has succeeded.
+     */
+    200: EventType;
+};
+
+export type GetEventTypeResponse = GetEventTypeResponses[keyof GetEventTypeResponses];
 
 export type GetHealthData = {
     body?: never;

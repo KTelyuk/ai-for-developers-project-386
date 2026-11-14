@@ -6,8 +6,8 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],
-      // Точка входа только слушает порт; всё остальное собирается через buildApp.
-      exclude: ['src/server.ts'],
+      // Точка входа только слушает порт; всё остальное собирается через buildApp. Типы из контракта сгенерированы.
+      exclude: ['src/server.ts', 'src/api/**'],
       thresholds: { lines: 80, functions: 80, branches: 80, statements: 80 },
     },
   },
