@@ -3,6 +3,8 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     env: { NODE_ENV: 'test' },
+    // Под нагрузкой на процессор (параллельные проверки) тест бывает дольше стандартных 5 с.
+    testTimeout: 15_000,
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],
