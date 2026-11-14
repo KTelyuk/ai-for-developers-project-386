@@ -1,6 +1,7 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type {
+  AdminBooking,
   Booking,
   BookingCreated,
   CreateBooking,
@@ -137,6 +138,30 @@ export function createHandlers({ clock, store }: Deps) {
       reply: FastifyReply,
     ): void {
       cancelGuestBooking(store, request.params.id, request.query.token, clock());
+      reply.code(204).send();
+    },
+
+    // Встреча не закончилась, пока «сейчас» раньше её конца: идущая сейчас тоже в списке.
+    listAdminBookings(): AdminBooking[] {
+      const now = clock().getTime();
+      return store.bookings
+        .list()
+        .filter((booking) => Date.parse(booking.endAt) > now)
+        .sort((a, b) => Date.parse(a.startAt) - Date.parse(b.startAt))
+        .map(({ cancelToken: _token, ...booking }) => ({
+          ...booking,
+          eventTypeTitle: store.eventTypes.get(booking.eventTypeId)?.title ?? '',
+        }));
+    },
+
+    // Владелец отменяет без токена и без проверки начала встречи; время сразу освобождается.
+    cancelBookingByOwner(
+      request: FastifyRequest<{ Params: { id: string } }>,
+      reply: FastifyReply,
+    ): void {
+      if (!store.bookings.delete(request.params.id)) {
+        throw new ApiError(404, 'NOT_FOUND', 'Запись не найдена');
+      }
       reply.code(204).send();
     },
 

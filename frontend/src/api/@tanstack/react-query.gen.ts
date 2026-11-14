@@ -3,8 +3,70 @@
 import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { cancelBooking, createBooking, createEventType, getBooking, getEventType, getHealth, listAvailability, listEventTypes, listSlots, type Options, updateEventType } from '../sdk.gen';
-import type { CancelBookingData, CancelBookingError, CancelBookingResponse, CreateBookingData, CreateBookingError, CreateBookingResponse, CreateEventTypeData, CreateEventTypeError, CreateEventTypeResponse, GetBookingData, GetBookingError, GetBookingResponse, GetEventTypeData, GetEventTypeError, GetEventTypeResponse, GetHealthData, GetHealthResponse, ListAvailabilityData, ListAvailabilityError, ListAvailabilityResponse, ListEventTypesData, ListEventTypesResponse, ListSlotsData, ListSlotsError, ListSlotsResponse, UpdateEventTypeData, UpdateEventTypeError, UpdateEventTypeResponse } from '../types.gen';
+import { cancelBooking, cancelBookingByOwner, createBooking, createEventType, getBooking, getEventType, getHealth, listAdminBookings, listAvailability, listEventTypes, listSlots, type Options, updateEventType } from '../sdk.gen';
+import type { CancelBookingByOwnerData, CancelBookingByOwnerError, CancelBookingByOwnerResponse, CancelBookingData, CancelBookingError, CancelBookingResponse, CreateBookingData, CreateBookingError, CreateBookingResponse, CreateEventTypeData, CreateEventTypeError, CreateEventTypeResponse, GetBookingData, GetBookingError, GetBookingResponse, GetEventTypeData, GetEventTypeError, GetEventTypeResponse, GetHealthData, GetHealthResponse, ListAdminBookingsData, ListAdminBookingsResponse, ListAvailabilityData, ListAvailabilityError, ListAvailabilityResponse, ListEventTypesData, ListEventTypesResponse, ListSlotsData, ListSlotsError, ListSlotsResponse, UpdateEventTypeData, UpdateEventTypeError, UpdateEventTypeResponse } from '../types.gen';
+
+export type QueryKey<TOptions extends Options> = [
+    Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
+        _id: string;
+        _infinite?: boolean;
+        tags?: ReadonlyArray<string>;
+    }
+];
+
+const createQueryKey = <TOptions extends Options>(id: string, options?: TOptions, infinite?: boolean, tags?: ReadonlyArray<string>): [
+    QueryKey<TOptions>[0]
+] => {
+    const params: QueryKey<TOptions>[0] = { _id: id, baseUrl: options?.baseUrl || (options?.client ?? client).getConfig().baseUrl } as QueryKey<TOptions>[0];
+    if (infinite) {
+        params._infinite = infinite;
+    }
+    if (tags) {
+        params.tags = tags;
+    }
+    if (options?.body) {
+        params.body = options.body;
+    }
+    if (options?.headers) {
+        params.headers = options.headers;
+    }
+    if (options?.path) {
+        params.path = options.path;
+    }
+    if (options?.query) {
+        params.query = options.query;
+    }
+    return [params];
+};
+
+export const listAdminBookingsQueryKey = (options?: Options<ListAdminBookingsData>) => createQueryKey('listAdminBookings', options);
+
+export const listAdminBookingsOptions = (options?: Options<ListAdminBookingsData>) => queryOptions<ListAdminBookingsResponse, DefaultError, ListAdminBookingsResponse, ReturnType<typeof listAdminBookingsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listAdminBookings({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listAdminBookingsQueryKey(options)
+});
+
+export const cancelBookingByOwnerMutation = (options?: Partial<Options<CancelBookingByOwnerData>>): UseMutationOptions<CancelBookingByOwnerResponse, CancelBookingByOwnerError, Options<CancelBookingByOwnerData>> => {
+    const mutationOptions: UseMutationOptions<CancelBookingByOwnerResponse, CancelBookingByOwnerError, Options<CancelBookingByOwnerData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await cancelBookingByOwner({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
 
 export const createEventTypeMutation = (options?: Partial<Options<CreateEventTypeData>>): UseMutationOptions<CreateEventTypeResponse, CreateEventTypeError, Options<CreateEventTypeData>> => {
     const mutationOptions: UseMutationOptions<CreateEventTypeResponse, CreateEventTypeError, Options<CreateEventTypeData>> = {
@@ -60,39 +122,6 @@ export const cancelBookingMutation = (options?: Partial<Options<CancelBookingDat
         }
     };
     return mutationOptions;
-};
-
-export type QueryKey<TOptions extends Options> = [
-    Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
-        _id: string;
-        _infinite?: boolean;
-        tags?: ReadonlyArray<string>;
-    }
-];
-
-const createQueryKey = <TOptions extends Options>(id: string, options?: TOptions, infinite?: boolean, tags?: ReadonlyArray<string>): [
-    QueryKey<TOptions>[0]
-] => {
-    const params: QueryKey<TOptions>[0] = { _id: id, baseUrl: options?.baseUrl || (options?.client ?? client).getConfig().baseUrl } as QueryKey<TOptions>[0];
-    if (infinite) {
-        params._infinite = infinite;
-    }
-    if (tags) {
-        params.tags = tags;
-    }
-    if (options?.body) {
-        params.body = options.body;
-    }
-    if (options?.headers) {
-        params.headers = options.headers;
-    }
-    if (options?.path) {
-        params.path = options.path;
-    }
-    if (options?.query) {
-        params.query = options.query;
-    }
-    return [params];
 };
 
 export const getBookingQueryKey = (options: Options<GetBookingData>) => createQueryKey('getBooking', options);
