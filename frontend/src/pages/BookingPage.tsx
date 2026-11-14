@@ -7,6 +7,7 @@ import {
   getBookingOptions,
   getEventTypeOptions,
 } from '@/api/@tanstack/react-query.gen.ts';
+import { LoadError, Loading } from '@/components/LoadState.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { formatBookingDate, formatTimeRange } from '@/lib/bookings.ts';
 
@@ -75,16 +76,18 @@ export function BookingPage() {
   if (cancelCode === 'INVALID_TOKEN') return UNAVAILABLE;
 
   if (booking.isPending) {
-    return <p className="mx-auto max-w-xl px-4 py-8 text-muted-foreground">Загрузка…</p>;
+    return <Loading className="mx-auto max-w-xl px-4 py-8">Загрузка…</Loading>;
   }
   if (booking.isError) {
     const code = errorCode(booking.error);
     if (code === 'NOT_FOUND') return NOT_FOUND;
     if (code === 'INVALID_TOKEN') return UNAVAILABLE;
     return (
-      <p role="alert" className="mx-auto max-w-xl px-4 py-8 text-destructive">
-        Не удалось загрузить запись. Обновите страницу.
-      </p>
+      <LoadError
+        className="mx-auto max-w-xl px-4 py-8"
+        message="Не удалось загрузить запись"
+        onRetry={() => void booking.refetch()}
+      />
     );
   }
 

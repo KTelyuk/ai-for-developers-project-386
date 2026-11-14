@@ -6,6 +6,7 @@ import {
   listAdminBookingsOptions,
 } from '@/api/@tanstack/react-query.gen.ts';
 import { AdminNav } from '@/components/AdminNav.tsx';
+import { LoadError, Loading } from '@/components/LoadState.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { formatBookingDate, formatTimeRange } from '@/lib/bookings.ts';
 import { OWNER_TIME_ZONE_LABEL } from '@/lib/event-types.ts';
@@ -93,11 +94,9 @@ export function AdminBookingsPage() {
         {notice}
       </p>
       {bookings.isPending ? (
-        <p className="text-muted-foreground">Загружаем…</p>
+        <Loading>Загружаем…</Loading>
       ) : bookings.isError ? (
-        <p role="alert" className="text-destructive">
-          Не удалось загрузить встречи
-        </p>
+        <LoadError message="Не удалось загрузить встречи" onRetry={() => void bookings.refetch()} />
       ) : bookings.data.length === 0 ? (
         <p className="text-muted-foreground">Предстоящих встреч нет</p>
       ) : (
