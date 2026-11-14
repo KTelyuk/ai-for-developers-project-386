@@ -40,8 +40,8 @@ description = "Type-check all packages"
 run = ["npm run typecheck -w backend", "npm run typecheck -w frontend"]
 
 [tasks.test]
-description = "Run all tests"
-run = ["npm test -w backend", "npm test -w frontend"]
+description = "Run all tests with coverage thresholds"
+run = ["npm test -w backend -- --coverage", "npm test -w frontend -- --coverage"]
 
 [tasks.build]
 description = "Build the frontend"
