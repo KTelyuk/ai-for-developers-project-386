@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw/http';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -53,6 +53,29 @@ describe('страница бронирования: календарь окна
     expect(days()[0]).toHaveAccessibleName(/16 ноября/);
     await vi.waitFor(() => expect(requested).toHaveLength(1));
     expect(requested[0]).toMatchObject({ from: '2026-11-16', to: '2026-11-29' });
+  });
+
+  it('окно сдвигается, когда в Алматы наступает следующий день, пока страница открыта', async () => {
+    vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
+    vi.setSystemTime(new Date('2026-11-16T23:59:30+05:00'));
+    const { requested } = mockAvailabilityApi({});
+    mockEventTypesApi([consultation]);
+    renderAt(`/book?eventType=${consultation.id}`);
+    expect(await screen.findByRole('button', { name: /16 ноября/ })).toBeInTheDocument();
+
+    await act(async () => {
+      vi.advanceTimersByTime(60_000);
+    });
+
+    expect(days()[0]).toHaveAccessibleName(/17 ноября/);
+    expect(days()[13]).toHaveAccessibleName(/30 ноября/);
+    await vi.waitFor(() =>
+      expect(requested).toContainEqual({
+        id: consultation.id,
+        from: '2026-11-17',
+        to: '2026-11-30',
+      }),
+    );
   });
 
   it('выходные и дни без слотов неактивны и не выбираются', async () => {

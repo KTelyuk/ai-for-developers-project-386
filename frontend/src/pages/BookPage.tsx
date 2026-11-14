@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Clock, Globe } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router';
 import type { BookingCreated, EventType, Slot } from '@/api';
@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button.tsx';
 import type { BookingFormValues } from '@/lib/bookings.ts';
 import { formatDuration, momentDate } from '@/lib/format.ts';
 import { OWNER_TIME_ZONE_LABEL, windowDays } from '@/lib/schedule.ts';
+import { useOwnerToday } from '@/lib/use-owner-today.ts';
 import { cn } from '@/lib/utils.ts';
 
 // Выбор хранится в адресе: `/book?eventType=<id>&date=YYYY-MM-DD`.
@@ -49,8 +50,9 @@ export function BookPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedId = searchParams.get(EVENT_TYPE_PARAM);
   const selected = eventTypes.data?.find((eventType) => eventType.id === selectedId);
-  // Окно считается от даты открытия страницы: при следующем заходе оно сдвинется вместе с датой.
-  const [days] = useState(() => windowDays(new Date()));
+  // Окно сдвигается вместе с датой по Алматы, даже если страница остаётся открытой.
+  const today = useOwnerToday();
+  const days = useMemo(() => windowDays(today), [today]);
   const dateParam = searchParams.get(DATE_PARAM);
   const selectedDate = days.find((day) => day.date === dateParam && !day.weekend)?.date;
   // Выбранное время, сообщение о занятом времени и созданная запись живут только на этой странице:

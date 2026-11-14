@@ -27,11 +27,11 @@ export function ownerToday(now: Date): string {
   return new Date(now.getTime() + OWNER_OFFSET_MS).toISOString().slice(0, 10);
 }
 
-// 14 календарных дней начиная с сегодняшнего по Алматы.
-export function windowDays(now: Date): WindowDay[] {
-  const today = Date.parse(ownerToday(now));
+// 14 календарных дней начиная с сегодняшнего по Алматы (`today` — из `ownerToday`).
+export function windowDays(today: string): WindowDay[] {
+  const start = Date.parse(today);
   return Array.from({ length: WINDOW_DAYS }, (_, index) => {
-    const day = new Date(today + index * DAY_MS);
+    const day = new Date(start + index * DAY_MS);
     const date = day.toISOString().slice(0, 10);
     const weekday = (day.getUTCDay() + 6) % 7;
     return {
