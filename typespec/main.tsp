@@ -195,6 +195,35 @@ interface Bookings {
   } | ValidationError | NotFoundError | SlotTakenError;
 }
 
+@error
+model InvalidTokenError {
+  @statusCode _: 403;
+  ...ApiError;
+}
+
+@error
+model AlreadyStartedError {
+  @statusCode _: 409;
+  ...ApiError;
+}
+
+// Страница записи гостя: доступ только с токеном из ссылки.
+// Записи нет (в том числе уже отменённой) — 404; токен неверный — 403 INVALID_TOKEN.
+@route("/api/bookings/{id}")
+@tag("Bookings")
+interface GuestBookings {
+  @get
+  @operationId("getBooking")
+  get(@path id: string, @query token: string): Booking | NotFoundError | InvalidTokenError;
+
+  // Отмена гостем: встреча уже началась — 409 ALREADY_STARTED.
+  @delete
+  @operationId("cancelBooking")
+  cancel(@path id: string, @query token: string): {
+    @statusCode _: 204;
+  } | NotFoundError | InvalidTokenError | AlreadyStartedError;
+}
+
 @route("/api/admin/event-types")
 @tag("Admin")
 interface AdminEventTypes {
