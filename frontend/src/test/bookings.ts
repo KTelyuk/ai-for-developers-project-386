@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw/http';
 import type { BookingCreated, CreateBooking, Slot } from '@/api';
+import { mockAvailabilityApi } from '@/test/availability.ts';
 import { server } from '@/test/msw.ts';
 
 export const BOOKING_ID = '33333333-3333-4333-8333-333333333333';
@@ -18,6 +19,10 @@ export function mockBookingApi({
   const free = Object.fromEntries(Object.entries(slots).map(([date, list]) => [date, [...list]]));
   const created: CreateBooking[] = [];
   const slotRequests: string[] = [];
+  // Счётчики календаря считаются по тем же свободным слотам и обновляются после брони.
+  mockAvailabilityApi(() =>
+    Object.fromEntries(Object.entries(free).map(([date, list]) => [date, list.length])),
+  );
   server.use(
     http.get('*/api/event-types/:id/slots', ({ request }) => {
       const date = new URL(request.url).searchParams.get('date') ?? '';

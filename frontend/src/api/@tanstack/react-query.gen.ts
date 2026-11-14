@@ -3,8 +3,8 @@
 import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { cancelBookingByOwner, createBooking, createEventType, getEventType, getHealth, listAdminBookings, listEventTypes, listSlots, type Options, updateEventType } from '../sdk.gen';
-import type { CancelBookingByOwnerData, CancelBookingByOwnerError, CancelBookingByOwnerResponse, CreateBookingData, CreateBookingError, CreateBookingResponse, CreateEventTypeData, CreateEventTypeError, CreateEventTypeResponse, GetEventTypeData, GetEventTypeError, GetEventTypeResponse, GetHealthData, GetHealthResponse, ListAdminBookingsData, ListAdminBookingsResponse, ListEventTypesData, ListEventTypesResponse, ListSlotsData, ListSlotsError, ListSlotsResponse, UpdateEventTypeData, UpdateEventTypeError, UpdateEventTypeResponse } from '../types.gen';
+import { cancelBookingByOwner, createBooking, createEventType, getEventType, getHealth, listAdminBookings, listAvailability, listEventTypes, listSlots, type Options, updateEventType } from '../sdk.gen';
+import type { CancelBookingByOwnerData, CancelBookingByOwnerError, CancelBookingByOwnerResponse, CreateBookingData, CreateBookingError, CreateBookingResponse, CreateEventTypeData, CreateEventTypeError, CreateEventTypeResponse, GetEventTypeData, GetEventTypeError, GetEventTypeResponse, GetHealthData, GetHealthResponse, ListAdminBookingsData, ListAdminBookingsResponse, ListAvailabilityData, ListAvailabilityError, ListAvailabilityResponse, ListEventTypesData, ListEventTypesResponse, ListSlotsData, ListSlotsError, ListSlotsResponse, UpdateEventTypeData, UpdateEventTypeError, UpdateEventTypeResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -138,6 +138,21 @@ export const getEventTypeOptions = (options: Options<GetEventTypeData>) => query
         return data;
     },
     queryKey: getEventTypeQueryKey(options)
+});
+
+export const listAvailabilityQueryKey = (options: Options<ListAvailabilityData>) => createQueryKey('listAvailability', options);
+
+export const listAvailabilityOptions = (options: Options<ListAvailabilityData>) => queryOptions<ListAvailabilityResponse, ListAvailabilityError, ListAvailabilityResponse, ReturnType<typeof listAvailabilityQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listAvailability({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listAvailabilityQueryKey(options)
 });
 
 export const listSlotsQueryKey = (options: Options<ListSlotsData>) => createQueryKey('listSlots', options);
