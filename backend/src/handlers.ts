@@ -5,6 +5,7 @@ import type {
   BookingCreated,
   CreateBooking,
   CreateEventType,
+  DayAvailability,
   EventType,
   HealthStatus,
   Slot,
@@ -14,7 +15,7 @@ import type { Clock } from './clock.ts';
 import { ApiError } from './errors.ts';
 import { cancelGuestBooking, findGuestBooking, publicBooking } from './guest-bookings.ts';
 import { isIntervalFree } from './overlap.ts';
-import { daySlots, formatOwnerTime, isInWindow, slotStartingAt } from './schedule.ts';
+import { daySlots, formatOwnerTime, isInWindow, rangeDates, slotStartingAt } from './schedule.ts';
 import type { Booking as StoredBooking, Store } from './store.ts';
 
 // Ссылка на страницу записи — путь от корня сайта с идентификатором и токеном отмены.
@@ -66,6 +67,26 @@ export function createHandlers({ clock, store }: Deps) {
         throw new ApiError(400, 'VALIDATION_ERROR', 'День вне окна записи');
       }
       return daySlots({ date, durationMinutes, bookings: store.bookings.list(), now });
+    },
+
+    listAvailability(
+      request: FastifyRequest<{
+        Params: { id: string };
+        Querystring: { from: string; to: string };
+      }>,
+    ): DayAvailability[] {
+      const { durationMinutes } = findEventType(request.params.id);
+      const dates = rangeDates(request.query.from, request.query.to);
+      if (!dates) {
+        throw new ApiError(400, 'VALIDATION_ERROR', 'Неверный диапазон дней');
+      }
+      const now = clock();
+      const bookings = store.bookings.list();
+      // Тот же расчёт, что и у слотов дня: счётчик всегда совпадает с их числом.
+      return dates.map((date) => ({
+        date,
+        freeSlots: daySlots({ date, durationMinutes, bookings, now }).length,
+      }));
     },
 
     // Проверка слота, пересечения и сохранение — одна синхронная операция без `await`:

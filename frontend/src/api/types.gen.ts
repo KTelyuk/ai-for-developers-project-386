@@ -38,6 +38,11 @@ export type CreateEventType = {
     durationMinutes: DurationMinutes;
 };
 
+export type DayAvailability = {
+    date: string;
+    freeSlots: number;
+};
+
 export type DurationMinutes = 15 | 30 | 45 | 60;
 
 export type ErrorCode = 'VALIDATION_ERROR' | 'NOT_FOUND' | 'INVALID_TOKEN' | 'SLOT_TAKEN' | 'ALREADY_STARTED' | 'SLOT_UNAVAILABLE';
@@ -265,6 +270,40 @@ export type GetEventTypeResponses = {
 };
 
 export type GetEventTypeResponse = GetEventTypeResponses[keyof GetEventTypeResponses];
+
+export type ListAvailabilityData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query: {
+        from: string;
+        to: string;
+    };
+    url: '/api/event-types/{id}/availability';
+};
+
+export type ListAvailabilityErrors = {
+    /**
+     * The server could not understand the request due to invalid syntax.
+     */
+    400: ApiError;
+    /**
+     * The server cannot find the requested resource.
+     */
+    404: ApiError;
+};
+
+export type ListAvailabilityError = ListAvailabilityErrors[keyof ListAvailabilityErrors];
+
+export type ListAvailabilityResponses = {
+    /**
+     * The request has succeeded.
+     */
+    200: Array<DayAvailability>;
+};
+
+export type ListAvailabilityResponse = ListAvailabilityResponses[keyof ListAvailabilityResponses];
 
 export type ListSlotsData = {
     body?: never;

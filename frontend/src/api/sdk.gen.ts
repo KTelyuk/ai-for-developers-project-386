@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CancelBookingData, CancelBookingErrors, CancelBookingResponses, CreateBookingData, CreateBookingErrors, CreateBookingResponses, CreateEventTypeData, CreateEventTypeErrors, CreateEventTypeResponses, GetBookingData, GetBookingErrors, GetBookingResponses, GetEventTypeData, GetEventTypeErrors, GetEventTypeResponses, GetHealthData, GetHealthResponses, ListEventTypesData, ListEventTypesResponses, ListSlotsData, ListSlotsErrors, ListSlotsResponses, UpdateEventTypeData, UpdateEventTypeErrors, UpdateEventTypeResponses } from './types.gen';
+import type { CancelBookingData, CancelBookingErrors, CancelBookingResponses, CreateBookingData, CreateBookingErrors, CreateBookingResponses, CreateEventTypeData, CreateEventTypeErrors, CreateEventTypeResponses, GetBookingData, GetBookingErrors, GetBookingResponses, GetEventTypeData, GetEventTypeErrors, GetEventTypeResponses, GetHealthData, GetHealthResponses, ListAvailabilityData, ListAvailabilityErrors, ListAvailabilityResponses, ListEventTypesData, ListEventTypesResponses, ListSlotsData, ListSlotsErrors, ListSlotsResponses, UpdateEventTypeData, UpdateEventTypeErrors, UpdateEventTypeResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -52,6 +52,8 @@ export const getBooking = <ThrowOnError extends boolean = false>(options: Option
 export const listEventTypes = <ThrowOnError extends boolean = false>(options?: Options<ListEventTypesData, ThrowOnError>): RequestResult<ListEventTypesResponses, unknown, ThrowOnError> => (options?.client ?? client).get<ListEventTypesResponses, unknown, ThrowOnError>({ url: '/api/event-types', ...options });
 
 export const getEventType = <ThrowOnError extends boolean = false>(options: Options<GetEventTypeData, ThrowOnError>): RequestResult<GetEventTypeResponses, GetEventTypeErrors, ThrowOnError> => (options.client ?? client).get<GetEventTypeResponses, GetEventTypeErrors, ThrowOnError>({ url: '/api/event-types/{id}', ...options });
+
+export const listAvailability = <ThrowOnError extends boolean = false>(options: Options<ListAvailabilityData, ThrowOnError>): RequestResult<ListAvailabilityResponses, ListAvailabilityErrors, ThrowOnError> => (options.client ?? client).get<ListAvailabilityResponses, ListAvailabilityErrors, ThrowOnError>({ url: '/api/event-types/{id}/availability', ...options });
 
 export const listSlots = <ThrowOnError extends boolean = false>(options: Options<ListSlotsData, ThrowOnError>): RequestResult<ListSlotsResponses, ListSlotsErrors, ThrowOnError> => (options.client ?? client).get<ListSlotsResponses, ListSlotsErrors, ThrowOnError>({ url: '/api/event-types/{id}/slots', ...options });
 

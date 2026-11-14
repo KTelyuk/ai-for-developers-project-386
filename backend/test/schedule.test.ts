@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { isIntervalFree, overlaps, type Interval } from '../src/overlap.ts';
-import { daySlots, isInWindow, todayInOwnerZone, windowDates } from '../src/schedule.ts';
+import {
+  daySlots,
+  isInWindow,
+  rangeDates,
+  todayInOwnerZone,
+  windowDates,
+} from '../src/schedule.ts';
 
 // Понедельник, 16 ноября 2026, 08:00 по Алматы — до начала рабочего дня.
 const MONDAY_EARLY = new Date('2026-11-16T08:00:00+05:00');
@@ -142,6 +148,31 @@ describe('расписание: окно записи', () => {
     ['не дата', 'tomorrow', false],
   ])('%s (%s) в окне: %s', (_name, date, expected) => {
     expect(isInWindow(date, MONDAY_EARLY)).toBe(expected);
+  });
+});
+
+describe('расписание: диапазон дней', () => {
+  it('дни от начала до конца включительно, через границу месяца', () => {
+    expect(rangeDates('2026-11-29', '2026-12-02')).toEqual([
+      '2026-11-29',
+      '2026-11-30',
+      '2026-12-01',
+      '2026-12-02',
+    ]);
+  });
+
+  it('один день', () => {
+    expect(rangeDates('2026-11-16', '2026-11-16')).toEqual(['2026-11-16']);
+  });
+
+  it.each([
+    ['длиннее окна', '2026-11-16', '2026-11-30'],
+    ['конец раньше начала', '2026-11-17', '2026-11-16'],
+    ['несуществующее начало', '2026-02-30', '2026-03-02'],
+    ['несуществующий конец', '2026-11-16', '2026-11-31'],
+    ['не дата', 'tomorrow', '2026-11-16'],
+  ])('%s — нет диапазона', (_name, from, to) => {
+    expect(rangeDates(from, to)).toBeUndefined();
   });
 });
 
