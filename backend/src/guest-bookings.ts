@@ -1,14 +1,8 @@
 // Доступ гостя к своей записи по ссылке `/bookings/{id}?token=...` (docs/spec.md, «Контракт API»).
 
 import { timingSafeEqual } from 'node:crypto';
-import type { Booking } from './api/types.gen.ts';
 import { ApiError } from './errors.ts';
-import type { Booking as StoredBooking, Store } from './store.ts';
-
-// Запись наружу отдаётся без токена отмены.
-export function publicBooking({ cancelToken: _token, ...booking }: StoredBooking): Booking {
-  return booking;
-}
+import type { Store, StoredBooking } from './store.ts';
 
 // Сравнение за постоянное время: по времени ответа токен не подобрать.
 function sameToken(expected: string, actual: string): boolean {

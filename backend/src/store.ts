@@ -1,20 +1,17 @@
 // Хранилище в памяти. Интерфейс синхронный: бронирование проверяет пересечение и сохраняет запись
 // одной операцией без `await` (docs/spec.md, «Модули бэкенда»). Замена на базу сохраняет интерфейс.
 
-import type { EventType } from './api/types.gen.ts';
+import type { Booking, EventType } from './api/types.gen.ts';
 
 export type { EventType };
 
-export type Booking = {
-  id: string;
-  eventTypeId: string;
-  guestName: string;
-  guestEmail: string;
-  startAt: string;
-  endAt: string;
-  createdAt: string;
-  cancelToken: string;
-};
+// Запись в хранилище — запись из контракта плюс токен отмены, который наружу не отдаётся.
+export type StoredBooking = Booking & { cancelToken: string };
+
+// Запись наружу — без токена отмены.
+export function publicBooking({ cancelToken: _token, ...booking }: StoredBooking): Booking {
+  return booking;
+}
 
 export interface Repository<T extends { id: string }> {
   list(): T[];
@@ -27,7 +24,7 @@ export interface Repository<T extends { id: string }> {
 
 export type Store = {
   eventTypes: Repository<EventType>;
-  bookings: Repository<Booking>;
+  bookings: Repository<StoredBooking>;
 };
 
 function createMemoryRepository<T extends { id: string }>(): Repository<T> {

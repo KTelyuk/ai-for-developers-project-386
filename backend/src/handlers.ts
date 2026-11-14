@@ -14,17 +14,19 @@ import type {
 } from './api/types.gen.ts';
 import type { Clock } from './clock.ts';
 import { ApiError } from './errors.ts';
-import { cancelGuestBooking, findGuestBooking, publicBooking } from './guest-bookings.ts';
+import { cancelGuestBooking, findGuestBooking } from './guest-bookings.ts';
+import { cancelOwnerBooking } from './owner-bookings.ts';
 import { isIntervalFree } from './overlap.ts';
 import { daySlots, formatOwnerTime, isInWindow, rangeDates, slotStartingAt } from './schedule.ts';
-import type { Booking as StoredBooking, Store } from './store.ts';
+import { publicBooking, type Store, type StoredBooking } from './store.ts';
 
 // Ссылка на страницу записи — путь от корня сайта с идентификатором и токеном отмены.
 function bookingLink(id: string, token: string): string {
   return `/bookings/${id}?token=${encodeURIComponent(token)}`;
 }
 
-export type Deps = { clock: Clock; store: Store };
+// Часы и хранилище, которые обработчики получают из buildApp (в тестах — подменённые).
+export type HandlerDependencies = { clock: Clock; store: Store };
 
 // Контракт проверяет длину как есть; название из одних пробелов тоже считается пустым.
 function normalizeTitle(title: string): string {
@@ -51,7 +53,7 @@ function normalizeGuestName(name: string): string {
 
 // Обработчики по operationId из openapi/openapi.yaml. Зависимости приходят из buildApp.
 // Форму тела, длины полей и список длительностей уже проверил fastify-openapi-glue по контракту.
-export function createHandlers({ clock, store }: Deps) {
+export function createHandlers({ clock, store }: HandlerDependencies) {
   function findEventType(id: string): EventType {
     const eventType = store.eventTypes.get(id);
     if (!eventType) throw new ApiError(404, 'NOT_FOUND', 'Тип встречи не найден');
@@ -134,8 +136,11 @@ export function createHandlers({ clock, store }: Deps) {
       };
       store.bookings.save(record);
       reply.code(201);
-      const { cancelToken: token, ...booking } = record;
-      return { booking, token, link: bookingLink(booking.id, token) };
+      return {
+        booking: publicBooking(record),
+        token: record.cancelToken,
+        link: bookingLink(record.id, record.cancelToken),
+      };
     },
 
     getBooking(
@@ -159,20 +164,17 @@ export function createHandlers({ clock, store }: Deps) {
         .list()
         .filter((booking) => Date.parse(booking.endAt) > now)
         .sort((a, b) => Date.parse(a.startAt) - Date.parse(b.startAt))
-        .map(({ cancelToken: _token, ...booking }) => ({
-          ...booking,
+        .map((booking) => ({
+          ...publicBooking(booking),
           eventTypeTitle: store.eventTypes.get(booking.eventTypeId)?.title ?? '',
         }));
     },
 
-    // Владелец отменяет без токена и без проверки начала встречи; время сразу освобождается.
     cancelBookingByOwner(
       request: FastifyRequest<{ Params: { id: string } }>,
       reply: FastifyReply,
     ): void {
-      if (!store.bookings.delete(request.params.id)) {
-        throw new ApiError(404, 'NOT_FOUND', 'Запись не найдена');
-      }
+      cancelOwnerBooking(store, request.params.id);
       reply.code(204).send();
     },
 

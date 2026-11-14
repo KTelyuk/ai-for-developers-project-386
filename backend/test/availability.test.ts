@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { createMemoryStore, type Booking, type Store } from '../src/store.ts';
+import { createMemoryStore, type Store, type StoredBooking } from '../src/store.ts';
 import { expectMatchesContract } from './contract.ts';
 import { buildTestApp } from './helpers.ts';
 
@@ -10,7 +10,7 @@ const CONSULTATION = {
   durationMinutes: 60 as const,
 };
 
-function storeWithConsultation(bookings: Booking[] = []): Store {
+function storeWithConsultation(bookings: StoredBooking[] = []): Store {
   const store = createMemoryStore();
   store.eventTypes.save(CONSULTATION);
   for (const booking of bookings) store.bookings.save(booking);
@@ -52,7 +52,7 @@ describe('число свободных слотов по дням', () => {
   });
 
   it('счётчик дня совпадает с числом слотов этого дня', async () => {
-    const booking: Booking = {
+    const booking: StoredBooking = {
       id: '33333333-3333-4333-8333-333333333333',
       eventTypeId: '44444444-4444-4444-8444-444444444444',
       guestName: 'Анна',
