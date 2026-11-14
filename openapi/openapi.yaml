@@ -503,6 +503,7 @@ components:
         - SLOT_TAKEN
         - ALREADY_STARTED
         - SLOT_UNAVAILABLE
+        - INTERNAL_ERROR
     EventType:
       type: object
       required:

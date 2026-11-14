@@ -56,7 +56,7 @@ export type DayAvailability = {
 
 export type DurationMinutes = 15 | 30 | 45 | 60;
 
-export type ErrorCode = 'VALIDATION_ERROR' | 'NOT_FOUND' | 'INVALID_TOKEN' | 'SLOT_TAKEN' | 'ALREADY_STARTED' | 'SLOT_UNAVAILABLE';
+export type ErrorCode = 'VALIDATION_ERROR' | 'NOT_FOUND' | 'INVALID_TOKEN' | 'SLOT_TAKEN' | 'ALREADY_STARTED' | 'SLOT_UNAVAILABLE' | 'INTERNAL_ERROR';
 
 export type EventType = {
     id: string;

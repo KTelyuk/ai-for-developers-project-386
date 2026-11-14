@@ -16,6 +16,7 @@ union ErrorCode {
   "SLOT_TAKEN",
   "ALREADY_STARTED",
   "SLOT_UNAVAILABLE",
+  "INTERNAL_ERROR",
 }
 
 model ApiError {
