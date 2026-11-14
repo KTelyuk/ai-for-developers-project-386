@@ -153,6 +153,76 @@ export type CreateBookingResponses = {
 
 export type CreateBookingResponse = CreateBookingResponses[keyof CreateBookingResponses];
 
+export type CancelBookingData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query: {
+        token: string;
+    };
+    url: '/api/bookings/{id}';
+};
+
+export type CancelBookingErrors = {
+    /**
+     * Access is forbidden.
+     */
+    403: ApiError;
+    /**
+     * The server cannot find the requested resource.
+     */
+    404: ApiError;
+    /**
+     * The request conflicts with the current state of the server.
+     */
+    409: ApiError;
+};
+
+export type CancelBookingError = CancelBookingErrors[keyof CancelBookingErrors];
+
+export type CancelBookingResponses = {
+    /**
+     * There is no content to send for this request, but the headers may be useful.
+     */
+    204: void;
+};
+
+export type CancelBookingResponse = CancelBookingResponses[keyof CancelBookingResponses];
+
+export type GetBookingData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query: {
+        token: string;
+    };
+    url: '/api/bookings/{id}';
+};
+
+export type GetBookingErrors = {
+    /**
+     * Access is forbidden.
+     */
+    403: ApiError;
+    /**
+     * The server cannot find the requested resource.
+     */
+    404: ApiError;
+};
+
+export type GetBookingError = GetBookingErrors[keyof GetBookingErrors];
+
+export type GetBookingResponses = {
+    /**
+     * The request has succeeded.
+     */
+    200: Booking;
+};
+
+export type GetBookingResponse = GetBookingResponses[keyof GetBookingResponses];
+
 export type ListEventTypesData = {
     body?: never;
     path?: never;

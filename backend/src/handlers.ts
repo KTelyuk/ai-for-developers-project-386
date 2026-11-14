@@ -1,6 +1,7 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type {
+  Booking,
   BookingCreated,
   CreateBooking,
   CreateEventType,
@@ -11,6 +12,7 @@ import type {
 } from './api/types.gen.ts';
 import type { Clock } from './clock.ts';
 import { ApiError } from './errors.ts';
+import { cancelGuestBooking, findGuestBooking, publicBooking } from './guest-bookings.ts';
 import { isIntervalFree } from './overlap.ts';
 import { daySlots, formatOwnerTime, isInWindow, slotStartingAt } from './schedule.ts';
 import type { Booking as StoredBooking, Store } from './store.ts';
@@ -101,6 +103,20 @@ export function createHandlers({ clock, store }: Deps) {
       reply.code(201);
       const { cancelToken: token, ...booking } = record;
       return { booking, token, link: bookingLink(booking.id, token) };
+    },
+
+    getBooking(
+      request: FastifyRequest<{ Params: { id: string }; Querystring: { token: string } }>,
+    ): Booking {
+      return publicBooking(findGuestBooking(store, request.params.id, request.query.token));
+    },
+
+    cancelBooking(
+      request: FastifyRequest<{ Params: { id: string }; Querystring: { token: string } }>,
+      reply: FastifyReply,
+    ): void {
+      cancelGuestBooking(store, request.params.id, request.query.token, clock());
+      reply.code(204).send();
     },
 
     createEventType(

@@ -3,8 +3,8 @@
 import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { createBooking, createEventType, getEventType, getHealth, listEventTypes, listSlots, type Options, updateEventType } from '../sdk.gen';
-import type { CreateBookingData, CreateBookingError, CreateBookingResponse, CreateEventTypeData, CreateEventTypeError, CreateEventTypeResponse, GetEventTypeData, GetEventTypeError, GetEventTypeResponse, GetHealthData, GetHealthResponse, ListEventTypesData, ListEventTypesResponse, ListSlotsData, ListSlotsError, ListSlotsResponse, UpdateEventTypeData, UpdateEventTypeError, UpdateEventTypeResponse } from '../types.gen';
+import { cancelBooking, createBooking, createEventType, getBooking, getEventType, getHealth, listEventTypes, listSlots, type Options, updateEventType } from '../sdk.gen';
+import type { CancelBookingData, CancelBookingError, CancelBookingResponse, CreateBookingData, CreateBookingError, CreateBookingResponse, CreateEventTypeData, CreateEventTypeError, CreateEventTypeResponse, GetBookingData, GetBookingError, GetBookingResponse, GetEventTypeData, GetEventTypeError, GetEventTypeResponse, GetHealthData, GetHealthResponse, ListEventTypesData, ListEventTypesResponse, ListSlotsData, ListSlotsError, ListSlotsResponse, UpdateEventTypeData, UpdateEventTypeError, UpdateEventTypeResponse } from '../types.gen';
 
 export const createEventTypeMutation = (options?: Partial<Options<CreateEventTypeData>>): UseMutationOptions<CreateEventTypeResponse, CreateEventTypeError, Options<CreateEventTypeData>> => {
     const mutationOptions: UseMutationOptions<CreateEventTypeResponse, CreateEventTypeError, Options<CreateEventTypeData>> = {
@@ -48,6 +48,20 @@ export const createBookingMutation = (options?: Partial<Options<CreateBookingDat
     return mutationOptions;
 };
 
+export const cancelBookingMutation = (options?: Partial<Options<CancelBookingData>>): UseMutationOptions<CancelBookingResponse, CancelBookingError, Options<CancelBookingData>> => {
+    const mutationOptions: UseMutationOptions<CancelBookingResponse, CancelBookingError, Options<CancelBookingData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await cancelBooking({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
         _id: string;
@@ -80,6 +94,21 @@ const createQueryKey = <TOptions extends Options>(id: string, options?: TOptions
     }
     return [params];
 };
+
+export const getBookingQueryKey = (options: Options<GetBookingData>) => createQueryKey('getBooking', options);
+
+export const getBookingOptions = (options: Options<GetBookingData>) => queryOptions<GetBookingResponse, GetBookingError, GetBookingResponse, ReturnType<typeof getBookingQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getBooking({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getBookingQueryKey(options)
+});
 
 export const listEventTypesQueryKey = (options?: Options<ListEventTypesData>) => createQueryKey('listEventTypes', options);
 
