@@ -4,7 +4,73 @@ info:
   version: 0.0.0
 tags:
   - name: System
+  - name: Event types
+  - name: Admin
 paths:
+  /api/admin/event-types:
+    post:
+      operationId: createEventType
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventType'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      tags:
+        - Admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEventType'
+  /api/event-types:
+    get:
+      operationId: listEventTypes
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventType'
+      tags:
+        - Event types
+  /api/event-types/{id}:
+    get:
+      operationId: getEventType
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventType'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      tags:
+        - Event types
   /api/health:
     get:
       operationId: getHealth
@@ -20,6 +86,67 @@ paths:
         - System
 components:
   schemas:
+    ApiError:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          $ref: '#/components/schemas/ErrorCode'
+        message:
+          type: string
+    CreateEventType:
+      type: object
+      required:
+        - title
+        - durationMinutes
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+        durationMinutes:
+          $ref: '#/components/schemas/DurationMinutes'
+    DurationMinutes:
+      type: number
+      enum:
+        - 15
+        - 30
+        - 45
+        - 60
+    ErrorCode:
+      type: string
+      enum:
+        - VALIDATION_ERROR
+        - NOT_FOUND
+        - INVALID_TOKEN
+        - SLOT_TAKEN
+        - ALREADY_STARTED
+        - SLOT_UNAVAILABLE
+    EventType:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - durationMinutes
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+        durationMinutes:
+          $ref: '#/components/schemas/DurationMinutes'
     HealthStatus:
       type: object
       required:

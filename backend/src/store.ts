@@ -1,12 +1,9 @@
 // Хранилище в памяти. Интерфейс синхронный: бронирование проверяет пересечение и сохраняет запись
 // одной операцией без `await` (docs/spec.md, «Модули бэкенда»). Замена на базу сохраняет интерфейс.
 
-export type EventType = {
-  id: string;
-  title: string;
-  description: string;
-  durationMinutes: 15 | 30 | 45 | 60;
-};
+import type { EventType } from './api/types.gen.ts';
+
+export type { EventType };
 
 export type Booking = {
   id: string;

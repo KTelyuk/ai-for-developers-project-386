@@ -6,6 +6,7 @@
     "dev": "node --watch src/server.ts",
     "start": "node src/server.ts",
     "test": "vitest run",
+    "generate": "openapi-ts",
     "typecheck": "tsc"
   },
   "dependencies": {
@@ -14,9 +15,13 @@
     "fastify-openapi-glue": "^4.12.0"
   },
   "devDependencies": {
+    "@hey-api/openapi-ts": "^0.99.0",
     "@types/node": "^24.19.2",
     "@vitest/coverage-v8": "^5.1.0",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
     "typescript": "~6.0.3",
-    "vitest": "^5.1.0"
+    "vitest": "^5.1.0",
+    "yaml": "^2.9.1"
   }
 }
