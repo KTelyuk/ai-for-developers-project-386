@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw/http';
-import type { CreateEventType, EventType } from '@/api';
+import type { CreateEventType, EventType, UpdateEventType } from '@/api';
 import { server } from '@/test/msw.ts';
 
 export const intro: EventType = {
@@ -17,10 +17,12 @@ export const consultation: EventType = {
 };
 
 // API типов встреч в памяти теста: созданный тип сразу появляется в списке.
-// Возвращает тела запросов на создание, чтобы тест видел, что ушло на сервер.
+// Изменённый тип тоже сразу виден в списке.
+// Возвращает тела запросов на создание и изменение, чтобы тест видел, что ушло на сервер.
 export function mockEventTypesApi(initial: EventType[] = []) {
   const eventTypes = [...initial];
   const created: CreateEventType[] = [];
+  const updated: { id: string; body: UpdateEventType }[] = [];
   server.use(
     http.get('*/api/event-types', () => HttpResponse.json(eventTypes)),
     http.post('*/api/admin/event-types', async ({ request }) => {
@@ -35,6 +37,19 @@ export function mockEventTypesApi(initial: EventType[] = []) {
       eventTypes.push(eventType);
       return HttpResponse.json(eventType, { status: 201 });
     }),
+    http.patch('*/api/admin/event-types/:id', async ({ params, request }) => {
+      const body = (await request.json()) as UpdateEventType;
+      updated.push({ id: String(params.id), body });
+      const index = eventTypes.findIndex((eventType) => eventType.id === params.id);
+      if (index === -1) {
+        return HttpResponse.json(
+          { code: 'NOT_FOUND', message: 'Тип встречи не найден' },
+          { status: 404 },
+        );
+      }
+      eventTypes[index] = { ...eventTypes[index], ...body };
+      return HttpResponse.json(eventTypes[index]);
+    }),
   );
-  return { created };
+  return { created, updated };
 }

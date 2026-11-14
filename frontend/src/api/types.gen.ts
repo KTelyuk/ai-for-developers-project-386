@@ -35,6 +35,12 @@ export type Slot = {
     endAt: string;
 };
 
+export type UpdateEventType = {
+    title?: string;
+    description?: string;
+    durationMinutes?: DurationMinutes;
+};
+
 export type CreateEventTypeData = {
     body: CreateEventType;
     path?: never;
@@ -59,6 +65,37 @@ export type CreateEventTypeResponses = {
 };
 
 export type CreateEventTypeResponse = CreateEventTypeResponses[keyof CreateEventTypeResponses];
+
+export type UpdateEventTypeData = {
+    body: UpdateEventType;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/admin/event-types/{id}';
+};
+
+export type UpdateEventTypeErrors = {
+    /**
+     * The server could not understand the request due to invalid syntax.
+     */
+    400: ApiError;
+    /**
+     * The server cannot find the requested resource.
+     */
+    404: ApiError;
+};
+
+export type UpdateEventTypeError = UpdateEventTypeErrors[keyof UpdateEventTypeErrors];
+
+export type UpdateEventTypeResponses = {
+    /**
+     * The request has succeeded.
+     */
+    200: EventType;
+};
+
+export type UpdateEventTypeResponse = UpdateEventTypeResponses[keyof UpdateEventTypeResponses];
 
 export type ListEventTypesData = {
     body?: never;

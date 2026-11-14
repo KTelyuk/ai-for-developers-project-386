@@ -80,6 +80,18 @@ model CreateEventType {
   durationMinutes: DurationMinutes;
 }
 
+// Тело изменения: каждое поле необязательно, неуказанные остаются прежними.
+model UpdateEventType {
+  @minLength(1)
+  @maxLength(100)
+  title?: string;
+
+  @maxLength(500)
+  description?: string;
+
+  durationMinutes?: DurationMinutes;
+}
+
 @route("/api/event-types")
 @tag("Event types")
 interface EventTypes {
@@ -118,4 +130,12 @@ interface AdminEventTypes {
     @statusCode _: 201;
     @body body: EventType;
   } | ValidationError;
+
+  @patch(#{ implicitOptionality: false })
+  @route("/{id}")
+  @operationId("updateEventType")
+  update(@path id: string, @body body: UpdateEventType):
+    | EventType
+    | ValidationError
+    | NotFoundError;
 }
