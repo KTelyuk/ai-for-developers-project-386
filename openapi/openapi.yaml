@@ -146,6 +146,52 @@ paths:
                 $ref: '#/components/schemas/ApiError'
       tags:
         - Event types
+  /api/event-types/{id}/availability:
+    get:
+      operationId: listAvailability
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          explode: false
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DayAvailability'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      tags:
+        - Slots
   /api/event-types/{id}/slots:
     get:
       operationId: listSlots
@@ -288,6 +334,19 @@ components:
           maxLength: 500
         durationMinutes:
           $ref: '#/components/schemas/DurationMinutes'
+    DayAvailability:
+      type: object
+      required:
+        - date
+        - freeSlots
+      properties:
+        date:
+          type: string
+          format: date
+        freeSlots:
+          type: integer
+          format: int32
+          minimum: 0
     DurationMinutes:
       type: number
       enum:

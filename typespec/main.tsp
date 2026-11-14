@@ -121,6 +121,28 @@ interface Slots {
   list(@path id: string, @query date: plainDate): Slot[] | ValidationError | NotFoundError;
 }
 
+// Число свободных слотов дня `YYYY-MM-DD` по Алматы.
+model DayAvailability {
+  date: plainDate;
+
+  @minValue(0)
+  freeSlots: int32;
+}
+
+@route("/api/event-types/{id}/availability")
+@tag("Slots")
+interface Availability {
+  // Счётчики по каждому дню `from`–`to` включительно. Дни вне окна записи и выходные — 0;
+  // диапазон длиннее окна записи или с концом раньше начала — 400.
+  @get
+  @operationId("listAvailability")
+  list(
+    @path id: string,
+    @query from: plainDate,
+    @query to: plainDate,
+  ): DayAvailability[] | ValidationError | NotFoundError;
+}
+
 @error
 model SlotTakenError {
   @statusCode _: 409;
