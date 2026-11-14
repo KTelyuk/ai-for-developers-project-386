@@ -30,3 +30,17 @@ npm workspaces: `typespec/`, `backend/`, `frontend/`.
 - Коммиты — [Conventional Commits](https://www.conventionalcommits.org/): `feat:`, `fix:`, `test:`, `docs:`, `refactor:`, `chore:`, `ci:`. Проверяет commit-msg хук hk.
 - Не изменять и не переименовывать `.github/workflows/hexlet-check.yml` — это проверка Хекслета.
 - Версии инструментов меняются только в `mise.toml` и `package.json`.
+
+## Agent skills
+
+### Issue tracker
+
+Спецификация и тикеты — markdown-файлы в `docs/`: спецификация в spec.md, тикеты в tickets/NN-slug.md. Подробнее — `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Стандартные пять ролей (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`) — строка `Status:` в файле тикета. Подробнее — `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Один контекст: `GLOSSARY.md` и `docs/adr/` в корне. Подробнее — `docs/agents/domain.md`.
