@@ -5,3 +5,5 @@ frontend/src/components/ui/
 **/dist/
 .github/workflows/hexlet-check.yml
 .github/workflows/README.md
+.claude/skills/
+skills-lock.json
