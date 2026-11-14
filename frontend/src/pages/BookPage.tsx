@@ -4,9 +4,9 @@ import { Clock, Globe } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router';
 import type { BookingCreated, EventType, Slot } from '@/api';
 import { listEventTypesOptions } from '@/api/@tanstack/react-query.gen.ts';
+import { AvailabilityCalendar } from '@/components/AvailabilityCalendar.tsx';
 import { BookingConfirmation } from '@/components/BookingConfirmation.tsx';
 import { BookingForm } from '@/components/BookingForm.tsx';
-import { DayPicker } from '@/components/DayPicker.tsx';
 import { SlotList } from '@/components/SlotList.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { OWNER_TIME_ZONE_LABEL, formatDuration } from '@/lib/event-types.ts';
@@ -119,7 +119,8 @@ export function BookPage() {
               </div>
             ) : (
               <>
-                <DayPicker
+                <AvailabilityCalendar
+                  eventTypeId={selected.id}
                   days={days}
                   selected={selectedDate}
                   onSelect={(date) => {

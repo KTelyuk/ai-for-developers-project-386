@@ -60,6 +60,23 @@ export function isInWindow(date: string, now: Date): boolean {
   return windowDates(now).includes(date);
 }
 
+// `2026-11-31` разбирается как 1 декабря: дата существует, только если переживает обратное
+// преобразование.
+function isExistingDate(date: string, midnight: number): boolean {
+  return Number.isFinite(midnight) && toOwnerDate(midnight) === date;
+}
+
+// Дни `from`–`to` включительно. Несуществующая дата, конец раньше начала или диапазон длиннее
+// окна записи — `undefined`.
+export function rangeDates(from: string, to: string): string[] | undefined {
+  const start = dayStartMs(from);
+  const end = dayStartMs(to);
+  if (!isExistingDate(from, start) || !isExistingDate(to, end)) return undefined;
+  const length = (end - start) / DAY_MS + 1;
+  if (length < 1 || length > WINDOW_DAYS) return undefined;
+  return Array.from({ length }, (_, index) => toOwnerDate(start + index * DAY_MS));
+}
+
 // Слот, который начинается в момент `startAt`, без учёта записей: так бронь проверяет, что время —
 // слот по правилам расписания (на сетке, в рабочие часы, в окне, ещё не наступило).
 // Момент сравнивается как момент: `04:00Z` и `09:00+05:00` — одно и то же.

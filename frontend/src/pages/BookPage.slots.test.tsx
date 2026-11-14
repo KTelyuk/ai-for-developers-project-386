@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw/http';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Slot } from '@/api';
+import { mockAvailabilityApi } from '@/test/availability.ts';
 import { consultation, intro, mockEventTypesApi } from '@/test/event-types.ts';
 import { server } from '@/test/msw.ts';
 import { renderAt } from '@/test/render.tsx';
@@ -22,7 +23,11 @@ function slot(start: string, end: string): Slot {
 }
 
 // Слоты по дням; запрошенные даты — чтобы тест видел, что ушло на сервер.
+// Счётчики календаря совпадают с числом слотов дня.
 function mockSlotsApi(byDate: Record<string, Slot[]>) {
+  mockAvailabilityApi(
+    Object.fromEntries(Object.entries(byDate).map(([date, slots]) => [date, slots.length])),
+  );
   const requested: string[] = [];
   server.use(
     http.get('*/api/event-types/:id/slots', ({ request }) => {
@@ -35,23 +40,6 @@ function mockSlotsApi(byDate: Record<string, Slot[]>) {
 }
 
 describe('страница бронирования: слоты дня', () => {
-  it('после выбора типа встречи предлагает 14 дней окна, выходные неактивны', async () => {
-    const user = userEvent.setup();
-    mockEventTypesApi([intro, consultation]);
-    mockSlotsApi({});
-    renderAt('/book');
-
-    await user.click(await screen.findByRole('button', { name: /Консультация/ }));
-
-    const days = within(screen.getByRole('list', { name: 'Дни' })).getAllByRole('button');
-    expect(days).toHaveLength(14);
-    expect(days[0]).toHaveAccessibleName(/16 ноября/);
-    expect(days[13]).toHaveAccessibleName(/29 ноября/);
-    expect(screen.getByRole('button', { name: /21 ноября/ })).toBeDisabled();
-    expect(screen.getByRole('button', { name: /22 ноября/ })).toBeDisabled();
-    expect(screen.getByRole('button', { name: /17 ноября/ })).toBeEnabled();
-  });
-
   it('показывает свободное время дня по Алматы с подписью часового пояса', async () => {
     const user = userEvent.setup();
     mockEventTypesApi([intro, consultation]);
@@ -86,6 +74,7 @@ describe('страница бронирования: слоты дня', () => {
 
   it('сообщает, если слоты не загрузились', async () => {
     mockEventTypesApi([consultation]);
+    mockAvailabilityApi({ '2026-11-17': 1 });
     server.use(
       http.get('*/api/event-types/:id/slots', () =>
         HttpResponse.json({ code: 'VALIDATION_ERROR', message: 'x' }, { status: 400 }),

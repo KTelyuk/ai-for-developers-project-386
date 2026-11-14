@@ -5,7 +5,15 @@ const OWNER_OFFSET_MS = 5 * 60 * 60_000;
 const DAY_MS = 24 * 60 * 60_000;
 export const WINDOW_DAYS = 14;
 
-export type WindowDay = { date: string; label: string; weekend: boolean };
+export type WindowDay = {
+  date: string;
+  // `пн, 16 ноября`.
+  label: string;
+  dayOfMonth: number;
+  // День недели с понедельника: 0 — понедельник, 6 — воскресенье.
+  weekday: number;
+  weekend: boolean;
+};
 
 // Дата `YYYY-MM-DD` читается как полночь UTC: так день недели и подпись не зависят от пояса браузера.
 const dayLabel = new Intl.DateTimeFormat('ru-RU', {
@@ -20,11 +28,13 @@ export function windowDays(now: Date): WindowDay[] {
   const today = Date.parse(new Date(now.getTime() + OWNER_OFFSET_MS).toISOString().slice(0, 10));
   return Array.from({ length: WINDOW_DAYS }, (_, index) => {
     const day = new Date(today + index * DAY_MS);
-    const weekday = day.getUTCDay();
+    const weekday = (day.getUTCDay() + 6) % 7;
     return {
       date: day.toISOString().slice(0, 10),
       label: dayLabel.format(day),
-      weekend: weekday === 0 || weekday === 6,
+      dayOfMonth: day.getUTCDate(),
+      weekday,
+      weekend: weekday >= 5,
     };
   });
 }
