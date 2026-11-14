@@ -41,7 +41,7 @@ run = ["npm run typecheck -w backend", "npm run typecheck -w frontend"]
 
 [tasks.test]
 description = "Run all tests"
-run = "npm test -w backend"
+run = ["npm test -w backend", "npm test -w frontend"]
 
 [tasks.build]
 description = "Build the frontend"
