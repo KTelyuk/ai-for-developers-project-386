@@ -10,6 +10,7 @@ import { BookingForm } from '@/components/BookingForm.tsx';
 import { SlotList } from '@/components/SlotList.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { OWNER_TIME_ZONE_LABEL, formatDuration } from '@/lib/event-types.ts';
+import type { BookingFormValues } from '@/lib/bookings.ts';
 import { windowDays } from '@/lib/schedule.ts';
 
 // Выбор хранится в адресе: `/book?eventType=<id>&date=YYYY-MM-DD`.
@@ -55,6 +56,8 @@ export function BookPage() {
   const [slot, setSlot] = useState<Slot>();
   const [notice, setNotice] = useState<string>();
   const [created, setCreated] = useState<BookingCreated>();
+  // Введённые имя и email переживают конфликт: форма для другого времени открывается с ними.
+  const [guest, setGuest] = useState<BookingFormValues>();
   const chosenSlot = slot && slot.startAt.slice(0, 10) === selectedDate ? slot : undefined;
 
   function chooseSlot(next: Slot | undefined, message?: string) {
@@ -113,7 +116,11 @@ export function BookPage() {
                   eventType={selected}
                   slot={chosenSlot}
                   onBooked={setCreated}
-                  onSlotGone={(message) => chooseSlot(undefined, message)}
+                  defaultValues={guest}
+                  onSlotGone={(message, values) => {
+                    setGuest(values);
+                    chooseSlot(undefined, message);
+                  }}
                   onBack={() => chooseSlot(undefined)}
                 />
               </div>

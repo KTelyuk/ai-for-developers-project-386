@@ -18,8 +18,10 @@ type Props = {
   eventType: EventType;
   slot: Slot;
   onBooked: (created: BookingCreated) => void;
-  // Время перестало быть свободным: страница возвращает гостя к обновлённым слотам.
-  onSlotGone: (message: string) => void;
+  // Имя и email из прошлой попытки: после конфликта гость не вводит их заново.
+  defaultValues?: BookingFormValues;
+  // Время перестало быть свободным: страница возвращает гостя к обновлённым слотам с его данными.
+  onSlotGone: (message: string, values: BookingFormValues) => void;
   onBack: () => void;
 };
 
@@ -30,7 +32,14 @@ function errorCode(error: unknown) {
 }
 
 // Форма гостя: имя и email для выбранного времени.
-export function BookingForm({ eventType, slot, onBooked, onSlotGone, onBack }: Props) {
+export function BookingForm({
+  eventType,
+  slot,
+  defaultValues = { guestName: '', guestEmail: '' },
+  onBooked,
+  onSlotGone,
+  onBack,
+}: Props) {
   const id = useId();
   const queryClient = useQueryClient();
   const book = useMutation({
@@ -44,7 +53,7 @@ export function BookingForm({ eventType, slot, onBooked, onSlotGone, onBack }: P
     formState: { errors },
   } = useForm<BookingFormValues>({
     resolver: zodResolver(bookingFormSchema),
-    defaultValues: { guestName: '', guestEmail: '' },
+    defaultValues,
   });
 
   const submit = handleSubmit(async (values) => {
@@ -55,7 +64,8 @@ export function BookingForm({ eventType, slot, onBooked, onSlotGone, onBack }: P
       onBooked(created);
     } catch (error) {
       const code = errorCode(error);
-      if (code === 'SLOT_TAKEN' || code === 'SLOT_UNAVAILABLE') onSlotGone(SLOT_GONE_MESSAGE);
+      if (code === 'SLOT_TAKEN' || code === 'SLOT_UNAVAILABLE')
+        onSlotGone(SLOT_GONE_MESSAGE, values);
     }
   });
 
