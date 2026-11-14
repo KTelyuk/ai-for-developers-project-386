@@ -1,9 +1,16 @@
 // Дни и время по Алматы. Слоты считает сервер; фронтенд только показывает их как есть
 // и строит список дней окна для выбора (docs/spec.md, «Правила расписания»).
+// Смещение и окно владельца на фронтенде заданы только здесь.
 
+import { formatDay } from '@/lib/format.ts';
+
+// Смещение Алматы фиксированное, +05:00: летнего времени нет (docs/spec.md, issue #17).
 const OWNER_OFFSET_MS = 5 * 60 * 60_000;
 const DAY_MS = 24 * 60 * 60_000;
 export const WINDOW_DAYS = 14;
+
+// Подпись часового пояса владельца: всё время в интерфейсе — по Алматы.
+export const OWNER_TIME_ZONE_LABEL = 'Asia/Almaty (UTC+05:00)';
 
 export type WindowDay = {
   date: string;
@@ -15,31 +22,24 @@ export type WindowDay = {
   weekend: boolean;
 };
 
-// Дата `YYYY-MM-DD` читается как полночь UTC: так день недели и подпись не зависят от пояса браузера.
-const dayLabel = new Intl.DateTimeFormat('ru-RU', {
-  weekday: 'short',
-  day: 'numeric',
-  month: 'long',
-  timeZone: 'UTC',
-});
+// Сегодняшняя дата `YYYY-MM-DD` по Алматы.
+export function ownerToday(now: Date): string {
+  return new Date(now.getTime() + OWNER_OFFSET_MS).toISOString().slice(0, 10);
+}
 
 // 14 календарных дней начиная с сегодняшнего по Алматы.
 export function windowDays(now: Date): WindowDay[] {
-  const today = Date.parse(new Date(now.getTime() + OWNER_OFFSET_MS).toISOString().slice(0, 10));
+  const today = Date.parse(ownerToday(now));
   return Array.from({ length: WINDOW_DAYS }, (_, index) => {
     const day = new Date(today + index * DAY_MS);
+    const date = day.toISOString().slice(0, 10);
     const weekday = (day.getUTCDay() + 6) % 7;
     return {
-      date: day.toISOString().slice(0, 10),
-      label: dayLabel.format(day),
+      date,
+      label: formatDay(date),
       dayOfMonth: day.getUTCDate(),
       weekday,
       weekend: weekday >= 5,
     };
   });
-}
-
-// Время слота как пришло от сервера: `2026-11-16T09:00:00+05:00` → `09:00`.
-export function formatSlotTime(iso: string) {
-  return iso.slice(11, 16);
 }

@@ -8,8 +8,8 @@ import {
 import { AdminNav } from '@/components/AdminNav.tsx';
 import { LoadError, Loading } from '@/components/LoadState.tsx';
 import { Button } from '@/components/ui/button.tsx';
-import { formatBookingDate, formatTimeRange } from '@/lib/bookings.ts';
-import { OWNER_TIME_ZONE_LABEL } from '@/lib/event-types.ts';
+import { formatMomentDay, formatTimeRange } from '@/lib/format.ts';
+import { OWNER_TIME_ZONE_LABEL } from '@/lib/schedule.ts';
 
 // Встреча в списке владельца; «Отменить» сначала спрашивает подтверждение.
 function BookingItem({ booking, onMissing }: { booking: AdminBooking; onMissing: () => void }) {
@@ -30,7 +30,7 @@ function BookingItem({ booking, onMissing }: { booking: AdminBooking; onMissing:
       <div className="flex min-w-0 flex-col gap-1">
         <h3 className="font-medium break-words">{booking.eventTypeTitle}</h3>
         <p className="text-sm">
-          {formatBookingDate(booking.startAt)}, {formatTimeRange(booking.startAt, booking.endAt)}
+          {formatMomentDay(booking.startAt)}, {formatTimeRange(booking.startAt, booking.endAt)}
         </p>
         <p className="text-sm break-words text-muted-foreground">
           {booking.guestName} · {booking.guestEmail}

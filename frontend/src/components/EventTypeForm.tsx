@@ -7,12 +7,12 @@ import { Input } from '@/components/ui/input.tsx';
 import { Label } from '@/components/ui/label.tsx';
 import { Textarea } from '@/components/ui/textarea.tsx';
 import {
-  DURATIONS,
   type EventTypeFormInput,
   type EventTypeFormValues,
   eventTypeFormSchema,
-  formatDuration,
 } from '@/lib/event-types.ts';
+import { formatDuration } from '@/lib/format.ts';
+import { DURATIONS } from '@/lib/limits.ts';
 
 type Props = {
   submitLabel: string;

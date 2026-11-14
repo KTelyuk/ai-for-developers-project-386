@@ -3,8 +3,8 @@ import type { Ref } from 'react';
 import type { Slot } from '@/api';
 import { listSlotsOptions } from '@/api/@tanstack/react-query.gen.ts';
 import { LoadError, Loading } from '@/components/LoadState.tsx';
-import { OWNER_TIME_ZONE_LABEL } from '@/lib/event-types.ts';
-import { formatSlotTime } from '@/lib/schedule.ts';
+import { formatTime } from '@/lib/format.ts';
+import { OWNER_TIME_ZONE_LABEL } from '@/lib/schedule.ts';
 
 // Свободное время выбранного дня; время показывается как пришло от сервера, по Алматы.
 // Нажатие на время передаёт слот странице, и она открывает форму записи.
@@ -52,7 +52,7 @@ function Slots({ eventTypeId, date, onSelect }: Props & { date: string }) {
             onClick={() => onSelect(slot)}
             className="min-h-11 w-full rounded-lg border px-4 py-2 font-medium transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
           >
-            {formatSlotTime(slot.startAt)}
+            {formatTime(slot.startAt)}
           </button>
         </li>
       ))}

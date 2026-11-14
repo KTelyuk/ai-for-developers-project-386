@@ -10,9 +10,9 @@ import { BookingForm } from '@/components/BookingForm.tsx';
 import { LoadError, Loading } from '@/components/LoadState.tsx';
 import { SlotList } from '@/components/SlotList.tsx';
 import { Button } from '@/components/ui/button.tsx';
-import { OWNER_TIME_ZONE_LABEL, formatDuration } from '@/lib/event-types.ts';
 import type { BookingFormValues } from '@/lib/bookings.ts';
-import { windowDays } from '@/lib/schedule.ts';
+import { formatDuration, momentDate } from '@/lib/format.ts';
+import { OWNER_TIME_ZONE_LABEL, windowDays } from '@/lib/schedule.ts';
 import { cn } from '@/lib/utils.ts';
 
 // Выбор хранится в адресе: `/book?eventType=<id>&date=YYYY-MM-DD`.
@@ -60,7 +60,7 @@ export function BookPage() {
   const [created, setCreated] = useState<BookingCreated>();
   // Введённые имя и email переживают конфликт: форма для другого времени открывается с ними.
   const [guest, setGuest] = useState<BookingFormValues>();
-  const chosenSlot = slot && slot.startAt.slice(0, 10) === selectedDate ? slot : undefined;
+  const chosenSlot = slot && momentDate(slot.startAt) === selectedDate ? slot : undefined;
   const timeStep = useRef<HTMLElement>(null);
   // Закреплённые внизу кнопки шагов не должны закрывать конец страницы на телефоне.
   const withSteps = selected !== undefined && created === undefined;

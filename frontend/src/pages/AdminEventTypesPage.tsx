@@ -12,7 +12,7 @@ import { AdminNav } from '@/components/AdminNav.tsx';
 import { EventTypeForm } from '@/components/EventTypeForm.tsx';
 import { LoadError, Loading } from '@/components/LoadState.tsx';
 import { Button } from '@/components/ui/button.tsx';
-import { formatDuration } from '@/lib/event-types.ts';
+import { formatDuration } from '@/lib/format.ts';
 
 function errorMessage(error: unknown) {
   const message = (error as Partial<ApiError> | null)?.message;
