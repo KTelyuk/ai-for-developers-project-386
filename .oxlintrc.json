@@ -11,6 +11,12 @@
     "react/react-in-jsx-scope": "off",
     "import/no-unassigned-import": ["warn", { "allow": ["**/*.css"] }]
   },
+  "overrides": [
+    {
+      "files": ["e2e/**"],
+      "rules": { "react/rules-of-hooks": "off" }
+    }
+  ],
   "ignorePatterns": [
     ".claude/skills/**",
     "**/dist/**",
