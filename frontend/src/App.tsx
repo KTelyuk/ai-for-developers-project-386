@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router';
 import { SiteHeader } from '@/components/SiteHeader.tsx';
+import { AdminBookingsPage } from '@/pages/AdminBookingsPage.tsx';
 import { AdminEventTypesPage } from '@/pages/AdminEventTypesPage.tsx';
 import { BookPage } from '@/pages/BookPage.tsx';
 import { HomePage } from '@/pages/HomePage.tsx';
@@ -13,6 +14,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/book" element={<BookPage />} />
           <Route path="/admin/event-types" element={<AdminEventTypesPage />} />
+          <Route path="/admin/bookings" element={<AdminBookingsPage />} />
         </Routes>
       </main>
     </div>

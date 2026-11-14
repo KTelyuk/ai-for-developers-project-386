@@ -8,6 +8,7 @@ import {
   listEventTypesQueryKey,
   updateEventTypeMutation,
 } from '@/api/@tanstack/react-query.gen.ts';
+import { AdminNav } from '@/components/AdminNav.tsx';
 import { EventTypeForm } from '@/components/EventTypeForm.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { formatDuration } from '@/lib/event-types.ts';
@@ -92,6 +93,7 @@ export function AdminEventTypesPage() {
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-8 sm:py-12">
+      <AdminNav />
       <h1 className="text-3xl font-bold tracking-tight">Типы встреч</h1>
       <div className="grid gap-8 lg:grid-cols-[1fr_22rem]">
         <section aria-labelledby="event-types-list" className="flex min-w-0 flex-col gap-4">

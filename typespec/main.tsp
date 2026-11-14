@@ -191,3 +191,26 @@ interface AdminEventTypes {
     | ValidationError
     | NotFoundError;
 }
+
+// Встреча в списке владельца: запись и название её типа встречи.
+model AdminBooking {
+  ...Booking;
+  eventTypeTitle: string;
+}
+
+@route("/api/admin/bookings")
+@tag("Admin")
+interface AdminBookings {
+  // Ещё не закончившиеся встречи всех типов (идущие сейчас тоже) по возрастанию начала.
+  @get
+  @operationId("listAdminBookings")
+  list(): AdminBooking[];
+
+  // Отмена владельцем: без токена и без проверки начала встречи.
+  @delete
+  @route("/{id}")
+  @operationId("cancelBookingByOwner")
+  cancel(@path id: string): {
+    @statusCode _: 204;
+  } | NotFoundError;
+}

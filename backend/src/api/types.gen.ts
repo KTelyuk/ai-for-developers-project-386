@@ -4,6 +4,17 @@ export type ClientOptions = {
     baseUrl: `${string}://${string}` | (string & {});
 };
 
+export type AdminBooking = {
+    id: string;
+    eventTypeId: string;
+    guestName: string;
+    guestEmail: string;
+    startAt: string;
+    endAt: string;
+    createdAt: string;
+    eventTypeTitle: string;
+};
+
 export type ApiError = {
     code: ErrorCode;
     message: string;
@@ -63,6 +74,49 @@ export type UpdateEventType = {
     description?: string;
     durationMinutes?: DurationMinutes;
 };
+
+export type ListAdminBookingsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/admin/bookings';
+};
+
+export type ListAdminBookingsResponses = {
+    /**
+     * The request has succeeded.
+     */
+    200: Array<AdminBooking>;
+};
+
+export type ListAdminBookingsResponse = ListAdminBookingsResponses[keyof ListAdminBookingsResponses];
+
+export type CancelBookingByOwnerData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/admin/bookings/{id}';
+};
+
+export type CancelBookingByOwnerErrors = {
+    /**
+     * The server cannot find the requested resource.
+     */
+    404: ApiError;
+};
+
+export type CancelBookingByOwnerError = CancelBookingByOwnerErrors[keyof CancelBookingByOwnerErrors];
+
+export type CancelBookingByOwnerResponses = {
+    /**
+     * There is no content to send for this request, but the headers may be useful.
+     */
+    204: void;
+};
+
+export type CancelBookingByOwnerResponse = CancelBookingByOwnerResponses[keyof CancelBookingByOwnerResponses];
 
 export type CreateEventTypeData = {
     body: CreateEventType;
