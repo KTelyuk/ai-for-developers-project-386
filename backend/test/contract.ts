@@ -21,7 +21,7 @@ function pointer(...segments: string[]) {
 }
 
 export function expectMatchesContract(
-  method: 'get' | 'post' | 'patch' | 'delete',
+  method: 'get' | 'post' | 'put' | 'patch' | 'delete',
   pathTemplate: string,
   response: InjectResponse,
 ) {

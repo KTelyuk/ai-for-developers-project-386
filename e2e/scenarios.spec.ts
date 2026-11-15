@@ -140,6 +140,37 @@ test('гость отменяет запись по ссылке, и время 
   await expect(slotList(page).getByRole('button', { name: time, exact: true })).toBeVisible();
 });
 
+test('гость меняет время записи по ссылке, и владелец видит новое время', async ({
+  page,
+  request,
+  uniqueTitle,
+}) => {
+  const { title } = await createEventType(request, uniqueTitle('Перенос'), 15);
+  const { time, link } = await bookFirstFreeSlot(page, title, ANNA);
+
+  await page.goto(link);
+  await page.getByRole('link', { name: 'Изменить' }).click();
+  await expect(page.getByRole('heading', { name: 'Изменение записи' })).toBeVisible();
+  // Своё прежнее время занято, поэтому первое свободное — уже другое.
+  const newTime = await chooseFirstSlot(page);
+  expect(newTime).not.toBe(time);
+  const form = page.getByRole('form', { name: 'Ваши данные' });
+  await expect(form.getByLabel('Имя')).toHaveValue(ANNA.name);
+  await form.getByRole('button', { name: 'Сохранить изменения' }).click();
+
+  const booking = page.getByRole('region', { name: 'Ваша запись' });
+  await expect(booking).toContainText('Запись изменена');
+  await expect(booking).toContainText(newTime);
+
+  await page.goto('/admin/bookings');
+  const item = page
+    .getByRole('list', { name: 'Встречи' })
+    .getByRole('listitem')
+    .filter({ has: page.getByRole('heading', { name: title }) });
+  await expect(item).toContainText(newTime);
+  await expect(item).not.toContainText(`${time}–`);
+});
+
 test('владелец отменяет запись из своего списка', async ({ page, request, uniqueTitle }) => {
   const { title } = await createEventType(request, uniqueTitle('Интервью'), 45);
   const { link } = await bookFirstFreeSlot(page, title, BORIS);

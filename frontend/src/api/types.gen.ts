@@ -282,6 +282,47 @@ export type GetBookingResponses = {
 
 export type GetBookingResponse = GetBookingResponses[keyof GetBookingResponses];
 
+export type UpdateBookingData = {
+    body: CreateBooking;
+    path: {
+        id: string;
+    };
+    query: {
+        token: string;
+    };
+    url: '/api/bookings/{id}';
+};
+
+export type UpdateBookingErrors = {
+    /**
+     * The server could not understand the request due to invalid syntax.
+     */
+    400: ApiError;
+    /**
+     * Access is forbidden.
+     */
+    403: ApiError;
+    /**
+     * The server cannot find the requested resource.
+     */
+    404: ApiError;
+    /**
+     * The request conflicts with the current state of the server.
+     */
+    409: ApiError;
+};
+
+export type UpdateBookingError = UpdateBookingErrors[keyof UpdateBookingErrors];
+
+export type UpdateBookingResponses = {
+    /**
+     * The request has succeeded.
+     */
+    200: Booking;
+};
+
+export type UpdateBookingResponse = UpdateBookingResponses[keyof UpdateBookingResponses];
+
 export type ListEventTypesData = {
     body?: never;
     path?: never;

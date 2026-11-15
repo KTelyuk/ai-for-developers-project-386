@@ -3,8 +3,8 @@
 import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { cancelBooking, cancelBookingByOwner, createBooking, createEventType, getBooking, getEventType, getHealth, listAdminBookings, listAvailability, listEventTypes, listSlots, type Options, updateEventType } from '../sdk.gen';
-import type { CancelBookingByOwnerData, CancelBookingByOwnerError, CancelBookingByOwnerResponse, CancelBookingData, CancelBookingError, CancelBookingResponse, CreateBookingData, CreateBookingError, CreateBookingResponse, CreateEventTypeData, CreateEventTypeError, CreateEventTypeResponse, GetBookingData, GetBookingError, GetBookingResponse, GetEventTypeData, GetEventTypeError, GetEventTypeResponse, GetHealthData, GetHealthResponse, ListAdminBookingsData, ListAdminBookingsResponse, ListAvailabilityData, ListAvailabilityError, ListAvailabilityResponse, ListEventTypesData, ListEventTypesResponse, ListSlotsData, ListSlotsError, ListSlotsResponse, UpdateEventTypeData, UpdateEventTypeError, UpdateEventTypeResponse } from '../types.gen';
+import { cancelBooking, cancelBookingByOwner, createBooking, createEventType, getBooking, getEventType, getHealth, listAdminBookings, listAvailability, listEventTypes, listSlots, type Options, updateBooking, updateEventType } from '../sdk.gen';
+import type { CancelBookingByOwnerData, CancelBookingByOwnerError, CancelBookingByOwnerResponse, CancelBookingData, CancelBookingError, CancelBookingResponse, CreateBookingData, CreateBookingError, CreateBookingResponse, CreateEventTypeData, CreateEventTypeError, CreateEventTypeResponse, GetBookingData, GetBookingError, GetBookingResponse, GetEventTypeData, GetEventTypeError, GetEventTypeResponse, GetHealthData, GetHealthResponse, ListAdminBookingsData, ListAdminBookingsResponse, ListAvailabilityData, ListAvailabilityError, ListAvailabilityResponse, ListEventTypesData, ListEventTypesResponse, ListSlotsData, ListSlotsError, ListSlotsResponse, UpdateBookingData, UpdateBookingError, UpdateBookingResponse, UpdateEventTypeData, UpdateEventTypeError, UpdateEventTypeResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -138,6 +138,20 @@ export const getBookingOptions = (options: Options<GetBookingData>) => queryOpti
     },
     queryKey: getBookingQueryKey(options)
 });
+
+export const updateBookingMutation = (options?: Partial<Options<UpdateBookingData>>): UseMutationOptions<UpdateBookingResponse, UpdateBookingError, Options<UpdateBookingData>> => {
+    const mutationOptions: UseMutationOptions<UpdateBookingResponse, UpdateBookingError, Options<UpdateBookingData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updateBooking({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
 
 export const listEventTypesQueryKey = (options?: Options<ListEventTypesData>) => createQueryKey('listEventTypes', options);
 
