@@ -59,6 +59,30 @@ describe('маршруты', () => {
     ).toBeInTheDocument();
   });
 
+  it('в разделе владельца логотип ведёт на /admin, а не к гостю', async () => {
+    const user = userEvent.setup();
+    mockEventTypesApi([intro]);
+    renderAt('/admin/event-types');
+
+    const logo = within(screen.getByRole('banner')).getByRole('link', {
+      name: 'Календарь звонков',
+    });
+    expect(logo).toHaveAttribute('href', '/admin');
+
+    await user.click(logo);
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Типы встреч' }),
+    ).toBeInTheDocument();
+  });
+
+  it('у гостя логотип ведёт на главную', () => {
+    renderAt('/book');
+
+    expect(
+      within(screen.getByRole('banner')).getByRole('link', { name: 'Календарь звонков' }),
+    ).toHaveAttribute('href', '/');
+  });
+
   it('неизвестный адрес — «Страница не найдена» со ссылкой на главную и без ссылок на /admin', async () => {
     const user = userEvent.setup();
     renderAt('/no-such-page');
