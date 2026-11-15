@@ -1,5 +1,6 @@
-// Начальные данные для разработки: `mise run dev` запускает сервер с флагом `--seed`, и после
-// каждого перезапуска (`node --watch`) типы встреч уже есть. Продакшен и тесты стартуют пустыми.
+// Начальные данные: `mise run dev` запускает сервер с флагом `--seed`, и после каждого
+// перезапуска (`node --watch`) типы встреч уже есть. Демо на Render включает их переменной
+// `SEED=true`. Без флага и переменной сервер (Docker, тесты) стартует пустым.
 
 import { randomUUID } from 'node:crypto';
 import type { EventType, Store } from './store.ts';
@@ -21,6 +22,13 @@ export const DEV_EVENT_TYPES: readonly Omit<EventType, 'id'>[] = [
     durationMinutes: 60,
   },
 ];
+
+export function shouldSeed(
+  argv: readonly string[],
+  env: Readonly<Record<string, string | undefined>>,
+): boolean {
+  return argv.includes('--seed') || env.SEED === 'true';
+}
 
 // Записей нет: им нужны даты в окне записи, а гость всё равно получает ссылку только при брони.
 export function seedDevData(store: Store): void {

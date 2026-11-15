@@ -1,11 +1,12 @@
 import { buildApp } from './app.ts';
-import { seedDevData } from './dev-seed.ts';
+import { seedDevData, shouldSeed } from './dev-seed.ts';
 import { createMemoryStore } from './store.ts';
 
 const port = Number(process.env.PORT ?? 3000);
 const store = createMemoryStore();
-// `--seed` передаёт только `npm run dev`: данные в памяти, и без них после перезапуска пусто.
-if (process.argv.includes('--seed')) seedDevData(store);
+// Данные в памяти, и без заготовок после перезапуска пусто. `--seed` передаёт `npm run dev`,
+// `SEED=true` задан на Render, чтобы демо после сна и деплоя открывалось с типами встреч.
+if (shouldSeed(process.argv, process.env)) seedDevData(store);
 const app = buildApp({ store });
 
 try {
