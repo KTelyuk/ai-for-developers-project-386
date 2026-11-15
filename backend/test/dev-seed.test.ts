@@ -1,13 +1,30 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { DEV_EVENT_TYPES, seedDevData } from '../src/dev-seed.ts';
+import { DEV_EVENT_TYPES, seedDevData, shouldSeed } from '../src/dev-seed.ts';
 import { createMemoryStore } from '../src/store.ts';
 import { expectMatchesContract } from './contract.ts';
 import { buildTestApp } from './helpers.ts';
 
-let app: ReturnType<typeof buildTestApp>;
+let app: ReturnType<typeof buildTestApp> | undefined;
 
 afterEach(async () => {
-  await app.close();
+  await app?.close();
+  app = undefined;
+});
+
+describe('когда заполнять начальные данные', () => {
+  it('с флагом --seed', () => {
+    expect(shouldSeed(['node', 'server.ts', '--seed'], {})).toBe(true);
+  });
+
+  it('с переменной SEED=true', () => {
+    expect(shouldSeed(['node', 'server.ts'], { SEED: 'true' })).toBe(true);
+  });
+
+  it('без флага и с любым другим значением SEED сервер стартует пустым', () => {
+    expect(shouldSeed(['node', 'server.ts'], {})).toBe(false);
+    expect(shouldSeed(['node', 'server.ts'], { SEED: '1' })).toBe(false);
+    expect(shouldSeed(['node', 'server.ts'], { SEED: 'false' })).toBe(false);
+  });
 });
 
 describe('начальные данные для разработки', () => {
