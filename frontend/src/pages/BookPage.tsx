@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useRef, useState } from 'react';
 import { Clock, Globe } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
@@ -11,7 +11,7 @@ import {
   type Slot,
   updateBooking,
 } from '@/api';
-import { listEventTypesOptions } from '@/api/@tanstack/react-query.gen.ts';
+import { getBookingQueryKey, listEventTypesOptions } from '@/api/@tanstack/react-query.gen.ts';
 import { AvailabilityCalendar } from '@/components/AvailabilityCalendar.tsx';
 import { BookingConfirmation } from '@/components/BookingConfirmation.tsx';
 import { BookingForm } from '@/components/BookingForm.tsx';
@@ -58,6 +58,7 @@ function EventTypeInfo({ eventType }: { eventType: EventType }) {
 
 export function BookPage({ rebooking }: { rebooking?: Rebooking }) {
   const eventTypes = useQuery(listEventTypesOptions());
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   // При изменении записи токен переживает любой шаг: без него сервер ответит 403.
@@ -97,12 +98,10 @@ export function BookPage({ rebooking }: { rebooking?: Rebooking }) {
   async function save(body: CreateBooking) {
     if (rebooking) {
       const { id } = rebooking.booking;
-      await updateBooking({
-        path: { id },
-        query: { token: rebooking.token },
-        body,
-        throwOnError: true,
-      });
+      const options = { path: { id }, query: { token: rebooking.token } };
+      const { data } = await updateBooking({ ...options, body, throwOnError: true });
+      // В кэше ещё прежняя запись: без этого страница записи на миг показала бы старое время.
+      queryClient.setQueryData(getBookingQueryKey(options), data);
       await navigate(bookingPath(id, rebooking.token), { state: { updated: true } });
       return;
     }
