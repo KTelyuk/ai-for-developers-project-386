@@ -14,3 +14,6 @@ coverage/
 # Отчёты Playwright
 test-results/
 playwright-report/
+
+# Конфиг MCP-серверов с личными токенами
+.mcp.json
