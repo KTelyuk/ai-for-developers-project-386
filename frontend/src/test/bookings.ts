@@ -78,16 +78,24 @@ function errorReply({ status, code, message }: ErrorReply) {
 
 // Страница записи в памяти теста: одна запись `guestBooking` с токеном `BOOKING_TOKEN`
 // и её тип встречи. Чужой токен — 403, после отмены запись не найти — 404.
-// `cancelError` подменяет ответ на отмену ошибкой. Возвращает токены отмен, ушедших на сервер.
+// Изменение заменяет запись телом запроса; `endAt` — по длительности типа из `eventTypes`.
+// `cancelError` и `updateError` подменяют ответы ошибкой.
+// Возвращает токены отмен и тела изменений, ушедших на сервер.
 export function mockGuestBookingApi({
   eventType,
+  eventTypes = [eventType],
   cancelError,
+  updateError,
 }: {
   eventType: EventType;
+  eventTypes?: EventType[];
   cancelError?: ErrorReply;
+  updateError?: ErrorReply;
 }) {
   let exists = true;
+  let current = guestBooking;
   const cancelled: string[] = [];
+  const updated: CreateBooking[] = [];
   function denied(id: unknown, request: Request) {
     const token = new URL(request.url).searchParams.get('token');
     if (!exists || id !== BOOKING_ID) {
@@ -99,15 +107,32 @@ export function mockGuestBookingApi({
     return undefined;
   }
   server.use(
-    http.get('*/api/event-types/:id', ({ params }) =>
-      params.id === eventType.id
-        ? HttpResponse.json(eventType)
-        : errorReply({ status: 404, code: 'NOT_FOUND', message: 'Тип встречи не найден' }),
-    ),
+    http.get('*/api/event-types/:id', ({ params }) => {
+      const found = eventTypes.find((item) => item.id === params.id);
+      return found
+        ? HttpResponse.json(found)
+        : errorReply({ status: 404, code: 'NOT_FOUND', message: 'Тип встречи не найден' });
+    }),
     http.get(
       '*/api/bookings/:id',
-      ({ params, request }) => denied(params.id, request) ?? HttpResponse.json(guestBooking),
+      ({ params, request }) => denied(params.id, request) ?? HttpResponse.json(current),
     ),
+    http.put('*/api/bookings/:id', async ({ params, request }) => {
+      const body = (await request.json()) as CreateBooking;
+      updated.push(body);
+      const reply = denied(params.id, request);
+      if (reply) return reply;
+      if (updateError) return errorReply(updateError);
+      const minutes = eventTypes.find((item) => item.id === body.eventTypeId)?.durationMinutes ?? 0;
+      const endAt = new Date(Date.parse(body.startAt) + minutes * 60_000);
+      current = {
+        ...current,
+        ...body,
+        // Ответ в часовом поясе Алматы, как у сервера.
+        endAt: `${new Date(endAt.getTime() + 5 * 3_600_000).toISOString().slice(0, 19)}+05:00`,
+      };
+      return HttpResponse.json(current);
+    }),
     http.delete('*/api/bookings/:id', ({ params, request }) => {
       cancelled.push(new URL(request.url).searchParams.get('token') ?? '');
       const reply = denied(params.id, request);
@@ -117,5 +142,5 @@ export function mockGuestBookingApi({
       return new HttpResponse(null, { status: 204 });
     }),
   );
-  return { cancelled };
+  return { cancelled, updated };
 }

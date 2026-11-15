@@ -2,18 +2,19 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useId } from 'react';
 import { useForm } from 'react-hook-form';
-import type { ApiError, BookingCreated, EventType, Slot } from '@/api';
-import { createBookingMutation } from '@/api/@tanstack/react-query.gen.ts';
+import type { CreateBooking, EventType, Slot } from '@/api';
 import { Button } from '@/components/ui/button.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { Label } from '@/components/ui/label.tsx';
-import { type BookingFormValues, bookingFormSchema } from '@/lib/bookings.ts';
+import { type BookingFormValues, bookingFormSchema, errorCode } from '@/lib/bookings.ts';
 import { formatMomentDay, formatTimeRange } from '@/lib/format.ts';
 
 type Props = {
   eventType: EventType;
   slot: Slot;
-  onBooked: (created: BookingCreated) => void;
+  // Отправка на сервер: новая бронь или изменение записи. Ошибка сервера — отклонённый промис.
+  save: (body: CreateBooking) => Promise<void>;
+  submitLabel: string;
   // Имя и email из прошлой попытки: после конфликта гость не вводит их заново.
   defaultValues?: BookingFormValues;
   // Время перестало быть свободным: страница возвращает гостя к обновлённым слотам с его данными.
@@ -22,9 +23,13 @@ type Props = {
 };
 
 const SLOT_GONE_MESSAGE = 'Это время уже заняли. Выберите другое.';
+const SLOT_GONE_CODES = ['SLOT_TAKEN', 'SLOT_UNAVAILABLE'];
 
-function errorCode(error: unknown) {
-  return (error as Partial<ApiError> | null)?.code;
+// Сообщение об ошибке сервера, после которой гость остаётся в форме.
+function serverErrorMessage(code: string | undefined) {
+  return code === 'ALREADY_STARTED'
+    ? 'Встреча уже началась — изменить её нельзя.'
+    : 'Не удалось сохранить запись. Попробуйте ещё раз.';
 }
 
 // Форма гостя: имя и email для выбранного времени.
@@ -32,15 +37,16 @@ export function BookingForm({
   eventType,
   slot,
   defaultValues = { guestName: '', guestEmail: '' },
-  onBooked,
+  save,
+  submitLabel,
   onSlotGone,
   onBack,
 }: Props) {
   const id = useId();
   const queryClient = useQueryClient();
   const book = useMutation({
-    ...createBookingMutation(),
-    // Занятое время пропадает из слотов и счётчиков всех типов встреч.
+    mutationFn: save,
+    // Занятое и освободившееся время пропадает из слотов и счётчиков всех типов встреч.
     onSettled: () => queryClient.invalidateQueries(),
   });
   const {
@@ -54,19 +60,14 @@ export function BookingForm({
 
   const submit = handleSubmit(async (values) => {
     try {
-      const created = await book.mutateAsync({
-        body: { eventTypeId: eventType.id, startAt: slot.startAt, ...values },
-      });
-      onBooked(created);
+      await book.mutateAsync({ eventTypeId: eventType.id, startAt: slot.startAt, ...values });
     } catch (error) {
-      const code = errorCode(error);
-      if (code === 'SLOT_TAKEN' || code === 'SLOT_UNAVAILABLE')
-        onSlotGone(SLOT_GONE_MESSAGE, values);
+      if (SLOT_GONE_CODES.includes(errorCode(error) ?? '')) onSlotGone(SLOT_GONE_MESSAGE, values);
     }
   });
 
-  const showServerError =
-    book.isError && !['SLOT_TAKEN', 'SLOT_UNAVAILABLE'].includes(errorCode(book.error) ?? '');
+  const serverCode = errorCode(book.error);
+  const showServerError = book.isError && !SLOT_GONE_CODES.includes(serverCode ?? '');
 
   const fieldError = (name: keyof BookingFormValues) => {
     const message = errors[name]?.message;
@@ -124,12 +125,12 @@ export function BookingForm({
       </div>
       {showServerError ? (
         <p role="alert" className="text-sm text-destructive">
-          Не удалось записаться. Попробуйте ещё раз.
+          {serverErrorMessage(serverCode)}
         </p>
       ) : null}
       <div className="flex flex-wrap gap-2">
         <Button type="submit" size="lg" className="h-11 px-6" disabled={book.isPending}>
-          Записаться
+          {submitLabel}
         </Button>
         <Button type="button" variant="outline" size="lg" className="h-11 px-6" onClick={onBack}>
           Другое время

@@ -1,8 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useRef, useState } from 'react';
 import { Clock, Globe } from 'lucide-react';
-import { Link, useSearchParams } from 'react-router';
-import type { BookingCreated, EventType, Slot } from '@/api';
+import { Link, useNavigate, useSearchParams } from 'react-router';
+import {
+  type Booking,
+  type BookingCreated,
+  type CreateBooking,
+  createBooking,
+  type EventType,
+  type Slot,
+  updateBooking,
+} from '@/api';
 import { listEventTypesOptions } from '@/api/@tanstack/react-query.gen.ts';
 import { AvailabilityCalendar } from '@/components/AvailabilityCalendar.tsx';
 import { BookingConfirmation } from '@/components/BookingConfirmation.tsx';
@@ -10,7 +18,7 @@ import { BookingForm } from '@/components/BookingForm.tsx';
 import { LoadError, Loading } from '@/components/LoadState.tsx';
 import { SlotList } from '@/components/SlotList.tsx';
 import { Button } from '@/components/ui/button.tsx';
-import type { BookingFormValues } from '@/lib/bookings.ts';
+import { type BookingFormValues, bookingPath } from '@/lib/bookings.ts';
 import { formatDuration, momentDate } from '@/lib/format.ts';
 import { OWNER_TIME_ZONE_LABEL, windowDays } from '@/lib/schedule.ts';
 import { useOwnerToday } from '@/lib/use-owner-today.ts';
@@ -19,6 +27,9 @@ import { cn } from '@/lib/utils.ts';
 // Выбор хранится в адресе: `/book?eventType=<id>&date=YYYY-MM-DD`.
 const EVENT_TYPE_PARAM = 'eventType';
 const DATE_PARAM = 'date';
+
+// Изменение записи гостем: те же шаги на `/bookings/{id}/edit?token=...`, токен остаётся в адресе.
+export type Rebooking = { booking: Booking; token: string };
 
 function EventTypeInfo({ eventType }: { eventType: EventType }) {
   return (
@@ -45,9 +56,13 @@ function EventTypeInfo({ eventType }: { eventType: EventType }) {
   );
 }
 
-export function BookPage() {
+export function BookPage({ rebooking }: { rebooking?: Rebooking }) {
   const eventTypes = useQuery(listEventTypesOptions());
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  // При изменении записи токен переживает любой шаг: без него сервер ответит 403.
+  const select = (params: Record<string, string>) =>
+    setSearchParams(rebooking ? { token: rebooking.token, ...params } : params);
   const selectedId = searchParams.get(EVENT_TYPE_PARAM);
   const selected = eventTypes.data?.find((eventType) => eventType.id === selectedId);
   // Окно сдвигается вместе с датой по Алматы, даже если страница остаётся открытой.
@@ -61,7 +76,13 @@ export function BookPage() {
   const [notice, setNotice] = useState<string>();
   const [created, setCreated] = useState<BookingCreated>();
   // Введённые имя и email переживают конфликт: форма для другого времени открывается с ними.
-  const [guest, setGuest] = useState<BookingFormValues>();
+  // При изменении записи форма открывается с прежними именем и email.
+  const [guest, setGuest] = useState<BookingFormValues | undefined>(
+    rebooking && {
+      guestName: rebooking.booking.guestName,
+      guestEmail: rebooking.booking.guestEmail,
+    },
+  );
   const chosenSlot = slot && momentDate(slot.startAt) === selectedDate ? slot : undefined;
   const timeStep = useRef<HTMLElement>(null);
   // Закреплённые внизу кнопки шагов не должны закрывать конец страницы на телефоне.
@@ -72,6 +93,23 @@ export function BookPage() {
     setNotice(message);
   }
 
+  // Новая бронь показывает подтверждение со ссылкой; изменённая запись — свою страницу.
+  async function save(body: CreateBooking) {
+    if (rebooking) {
+      const { id } = rebooking.booking;
+      await updateBooking({
+        path: { id },
+        query: { token: rebooking.token },
+        body,
+        throwOnError: true,
+      });
+      await navigate(bookingPath(id, rebooking.token), { state: { updated: true } });
+      return;
+    }
+    const { data } = await createBooking({ body, throwOnError: true });
+    setCreated(data);
+  }
+
   return (
     <div
       className={cn(
@@ -79,7 +117,19 @@ export function BookPage() {
         withSteps ? 'pb-28 md:pb-12' : 'pb-8 sm:pb-12',
       )}
     >
-      <h1 className="text-3xl font-bold tracking-tight">Бронирование</h1>
+      <div className="flex flex-col items-start gap-2">
+        <h1 className="text-3xl font-bold tracking-tight">
+          {rebooking ? 'Изменение записи' : 'Бронирование'}
+        </h1>
+        {rebooking ? (
+          <Link
+            to={bookingPath(rebooking.booking.id, rebooking.token)}
+            className="inline-flex min-h-11 items-center text-sm underline underline-offset-4"
+          >
+            Вернуться к записи без изменений
+          </Link>
+        ) : null}
+      </div>
       {eventTypes.isPending ? (
         <Loading>Загружаем типы встреч…</Loading>
       ) : eventTypes.isError ? (
@@ -113,7 +163,7 @@ export function BookPage() {
               className="h-11 flex-1 px-6 text-base md:flex-none"
               onClick={() => {
                 chooseSlot(undefined);
-                setSearchParams({});
+                select({});
               }}
             >
               Назад
@@ -147,7 +197,8 @@ export function BookPage() {
                 <BookingForm
                   eventType={selected}
                   slot={chosenSlot}
-                  onBooked={setCreated}
+                  save={save}
+                  submitLabel={rebooking ? 'Сохранить изменения' : 'Записаться'}
                   defaultValues={guest}
                   onSlotGone={(message, values) => {
                     setGuest(values);
@@ -164,7 +215,7 @@ export function BookPage() {
                   selected={selectedDate}
                   onSelect={(date) => {
                     chooseSlot(undefined);
-                    setSearchParams({ [EVENT_TYPE_PARAM]: selected.id, [DATE_PARAM]: date });
+                    select({ [EVENT_TYPE_PARAM]: selected.id, [DATE_PARAM]: date });
                   }}
                 />
                 <SlotList
@@ -189,7 +240,7 @@ export function BookPage() {
                   <li key={eventType.id} className="min-w-0">
                     <button
                       type="button"
-                      onClick={() => setSearchParams({ [EVENT_TYPE_PARAM]: eventType.id })}
+                      onClick={() => select({ [EVENT_TYPE_PARAM]: eventType.id })}
                       className="flex min-h-11 w-full flex-col gap-1 rounded-xl border p-4 text-left transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
                     >
                       <span className="flex w-full flex-wrap items-baseline justify-between gap-2">

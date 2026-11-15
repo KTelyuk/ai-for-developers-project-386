@@ -22,12 +22,24 @@ export function findGuestBooking(store: Store, id: string, token: string): Store
   return booking;
 }
 
-// Отмена гостем: те же проверки доступа, а начавшуюся встречу (start ≤ now) отменить нельзя — 409.
-// Отменённая запись удаляется, и её время снова свободно.
-export function cancelGuestBooking(store: Store, id: string, token: string, now: Date): void {
+// Запись, которую гость ещё может отменить или изменить: те же проверки доступа,
+// а начавшуюся встречу (start ≤ now) трогать нельзя — 409.
+export function findChangeableGuestBooking(
+  store: Store,
+  id: string,
+  token: string,
+  now: Date,
+  message: string,
+): StoredBooking {
   const booking = findGuestBooking(store, id, token);
   if (Date.parse(booking.startAt) <= now.getTime()) {
-    throw new ApiError(409, 'ALREADY_STARTED', 'Встреча уже началась, отменить её нельзя');
+    throw new ApiError(409, 'ALREADY_STARTED', message);
   }
+  return booking;
+}
+
+// Отмена гостем: отменённая запись удаляется, и её время снова свободно.
+export function cancelGuestBooking(store: Store, id: string, token: string, now: Date): void {
+  findChangeableGuestBooking(store, id, token, now, 'Встреча уже началась, отменить её нельзя');
   store.bookings.delete(id);
 }

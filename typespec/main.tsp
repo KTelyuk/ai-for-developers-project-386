@@ -208,6 +208,14 @@ model AlreadyStartedError {
   ...ApiError;
 }
 
+// 409 при изменении записи: SLOT_TAKEN или ALREADY_STARTED. Одна модель, а не две с одним
+// статусом: иначе в OpenAPI получится `anyOf` из двух одинаковых схем.
+@error
+model BookingConflictError {
+  @statusCode _: 409;
+  ...ApiError;
+}
+
 // Страница записи гостя: доступ только с токеном из ссылки.
 // Записи нет (в том числе уже отменённой) — 404; токен неверный — 403 INVALID_TOKEN.
 @route("/api/bookings/{id}")
@@ -216,6 +224,19 @@ interface GuestBookings {
   @get
   @operationId("getBooking")
   get(@path id: string, @query token: string): Booking | NotFoundError | InvalidTokenError;
+
+  // Изменение гостем: тип встречи, время, имя и email заменяются целиком, тело — как у брони.
+  // Ссылка, токен и `createdAt` прежние, `endAt` — по длительности нового типа встречи.
+  // Встреча уже началась — 409 ALREADY_STARTED; `startAt` не слот — 400 SLOT_UNAVAILABLE;
+  // время занято другой записью — 409 SLOT_TAKEN (сама изменяемая запись время не занимает).
+  @put
+  @operationId("updateBooking")
+  update(@path id: string, @query token: string, @body body: CreateBooking):
+    | Booking
+    | ValidationError
+    | NotFoundError
+    | InvalidTokenError
+    | BookingConflictError;
 
   // Отмена гостем: встреча уже началась — 409 ALREADY_STARTED.
   @delete

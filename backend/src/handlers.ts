@@ -14,7 +14,11 @@ import type {
 } from './api/types.gen.ts';
 import type { Clock } from './clock.ts';
 import { ApiError } from './errors.ts';
-import { cancelGuestBooking, findGuestBooking } from './guest-bookings.ts';
+import {
+  cancelGuestBooking,
+  findChangeableGuestBooking,
+  findGuestBooking,
+} from './guest-bookings.ts';
 import { cancelOwnerBooking } from './owner-bookings.ts';
 import { isIntervalFree } from './overlap.ts';
 import { daySlots, formatOwnerTime, isInWindow, rangeDates, slotStartingAt } from './schedule.ts';
@@ -58,6 +62,20 @@ export function createHandlers({ clock, store }: HandlerDependencies) {
     const eventType = store.eventTypes.get(id);
     if (!eventType) throw new ApiError(404, 'NOT_FOUND', 'Тип встречи не найден');
     return eventType;
+  }
+
+  // Время брони: `startAt` — слот этого типа встречи и не пересекается с записями `others`.
+  // Вызывается внутри той же синхронной операции, что и сохранение.
+  function reserveSlot(body: CreateBooking, now: Date, others: readonly StoredBooking[]) {
+    const { durationMinutes } = findEventType(body.eventTypeId);
+    const slot = slotStartingAt({ startAt: body.startAt, durationMinutes, now });
+    if (!slot) {
+      throw new ApiError(400, 'SLOT_UNAVAILABLE', 'Это время нельзя забронировать');
+    }
+    if (!isIntervalFree(slot, others)) {
+      throw new ApiError(409, 'SLOT_TAKEN', 'Это время уже занято');
+    }
+    return slot;
   }
 
   return {
@@ -112,17 +130,10 @@ export function createHandlers({ clock, store }: HandlerDependencies) {
       request: FastifyRequest<{ Body: CreateBooking }>,
       reply: FastifyReply,
     ): BookingCreated {
-      const { eventTypeId, startAt, guestEmail } = request.body;
+      const { eventTypeId, guestEmail } = request.body;
       const guestName = normalizeGuestName(request.body.guestName);
-      const { durationMinutes } = findEventType(eventTypeId);
       const now = clock();
-      const slot = slotStartingAt({ startAt, durationMinutes, now });
-      if (!slot) {
-        throw new ApiError(400, 'SLOT_UNAVAILABLE', 'Это время нельзя забронировать');
-      }
-      if (!isIntervalFree(slot, store.bookings.list())) {
-        throw new ApiError(409, 'SLOT_TAKEN', 'Это время уже занято');
-      }
+      const slot = reserveSlot(request.body, now, store.bookings.list());
       // endAt берётся из длительности на момент брони: смена длительности типа его не меняет.
       const record: StoredBooking = {
         id: randomUUID(),
@@ -147,6 +158,39 @@ export function createHandlers({ clock, store }: HandlerDependencies) {
       request: FastifyRequest<{ Params: { id: string }; Querystring: { token: string } }>,
     ): Booking {
       return publicBooking(findGuestBooking(store, request.params.id, request.query.token));
+    },
+
+    // Изменение гостем — замена записи целиком теми же проверками, что у брони, одной синхронной
+    // операцией. Сама запись время не занимает: её можно сдвинуть внутрь прежнего интервала.
+    updateBooking(
+      request: FastifyRequest<{
+        Params: { id: string };
+        Querystring: { token: string };
+        Body: CreateBooking;
+      }>,
+    ): Booking {
+      const { id } = request.params;
+      const now = clock();
+      const current = findChangeableGuestBooking(
+        store,
+        id,
+        request.query.token,
+        now,
+        'Встреча уже началась, изменить её нельзя',
+      );
+      const guestName = normalizeGuestName(request.body.guestName);
+      const others = store.bookings.list().filter((booking) => booking.id !== id);
+      const slot = reserveSlot(request.body, now, others);
+      const record: StoredBooking = {
+        ...current,
+        eventTypeId: request.body.eventTypeId,
+        guestName,
+        guestEmail: request.body.guestEmail,
+        startAt: slot.startAt,
+        endAt: slot.endAt,
+      };
+      store.bookings.save(record);
+      return publicBooking(record);
     },
 
     cancelBooking(
