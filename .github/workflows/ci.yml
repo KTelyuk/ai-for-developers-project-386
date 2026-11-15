@@ -23,8 +23,22 @@ jobs:
 
       - uses: jdx/mise-action@d5574b52816a478f9d4e6529a3f6ff17a8a36785 # v5.2.8
 
+      # `mise run check` включает e2e: Playwright поднимает настоящий сервер с собранным фронтендом.
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium webkit
+
       - name: Run all checks
         run: mise run check
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: playwright-report-check
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+          retention-days: 7
 
   docker:
     runs-on: ubuntu-latest
@@ -64,7 +78,8 @@ jobs:
           test "$code" = 404
           grep -q '"code":"NOT_FOUND"' body.json
 
-      # E2E против контейнера: Node.js и npm-зависимости ставит mise (хук postinstall → npm ci).
+      # Те же e2e против собранного образа: проверяет, что контейнер отдаёт фронтенд и API.
+      # Node.js и npm-зависимости ставит mise (хук postinstall → npm ci).
       - uses: jdx/mise-action@d5574b52816a478f9d4e6529a3f6ff17a8a36785 # v5.2.8
 
       - name: Install Playwright browsers

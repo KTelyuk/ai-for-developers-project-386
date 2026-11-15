@@ -17,10 +17,18 @@ const CONSULTATION = {
   durationMinutes: 60 as const,
 };
 
+const CALL = {
+  id: '33333333-3333-4333-8333-333333333333',
+  title: 'Звонок',
+  description: '',
+  durationMinutes: 30 as const,
+};
+
 function storeWithEventTypes(): Store {
   const store = createMemoryStore();
   store.eventTypes.save(INTRO);
   store.eventTypes.save(CONSULTATION);
+  store.eventTypes.save(CALL);
   return store;
 }
 
@@ -138,6 +146,32 @@ describe('бронирование', () => {
     expect(overlapping.statusCode).toBe(409);
     expect(overlapping.json()).toMatchObject({ code: 'SLOT_TAKEN' });
     expect(adjacent.statusCode).toBe(201);
+  });
+
+  // Встречи разной длительности: 60 минут в 10:00 занимают 10:00–11:00.
+  it.each([
+    ['30 минут в 10:30 — внутри часовой встречи', '2026-11-17T10:30:00+05:00'],
+    ['30 минут в 09:45 — заходит на начало', '2026-11-17T09:45:00+05:00'],
+    ['30 минут в 10:45 — выходит за конец', '2026-11-17T10:45:00+05:00'],
+  ])('60 минут в 10:00, затем %s — 409 SLOT_TAKEN', async (_case, startAt) => {
+    app = buildTestApp({ store: storeWithEventTypes() });
+    expect((await book({ startAt: '2026-11-17T10:00:00+05:00' })).statusCode).toBe(201);
+
+    const response = await book({ eventTypeId: CALL.id, startAt, guestName: 'Борис' });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json()).toMatchObject({ code: 'SLOT_TAKEN' });
+    expectMatchesContract('post', '/api/bookings', response);
+  });
+
+  it('60 минут в 10:00, затем 30 минут впритык (09:30 и 11:00) — обе записи проходят', async () => {
+    app = buildTestApp({ store: storeWithEventTypes() });
+    await book({ startAt: '2026-11-17T10:00:00+05:00' });
+
+    const before = await book({ eventTypeId: CALL.id, startAt: '2026-11-17T09:30:00+05:00' });
+    const after = await book({ eventTypeId: CALL.id, startAt: '2026-11-17T11:00:00+05:00' });
+
+    expect([before.statusCode, after.statusCode]).toEqual([201, 201]);
   });
 
   it('смена длительности типа встречи не меняет время созданной записи', async () => {
