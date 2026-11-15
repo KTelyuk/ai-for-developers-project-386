@@ -76,7 +76,7 @@ export function BookPage({ rebooking }: { rebooking?: Rebooking }) {
   const [slot, setSlot] = useState<Slot>();
   const [notice, setNotice] = useState<string>();
   const [created, setCreated] = useState<BookingCreated>();
-  // Введённые имя и email переживают конфликт: форма для другого времени открывается с ними.
+  // Введённые имя и email переживают конфликт и возврат к выбору времени: форма открывается с ними.
   // При изменении записи форма открывается с прежними именем и email.
   const [guest, setGuest] = useState<BookingFormValues | undefined>(
     rebooking && {
@@ -203,6 +203,7 @@ export function BookPage({ rebooking }: { rebooking?: Rebooking }) {
                     setGuest(values);
                     chooseSlot(undefined, message);
                   }}
+                  onValuesChange={setGuest}
                   onBack={() => chooseSlot(undefined)}
                 />
               </div>

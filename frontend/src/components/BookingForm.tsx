@@ -19,6 +19,9 @@ type Props = {
   defaultValues?: BookingFormValues;
   // Время перестало быть свободным: страница возвращает гостя к обновлённым слотам с его данными.
   onSlotGone: (message: string, values: BookingFormValues) => void;
+  // Каждое изменение полей: страница хранит введённое, и при возврате к другому времени
+  // или дню форма откроется с теми же именем и email.
+  onValuesChange: (values: BookingFormValues) => void;
   onBack: () => void;
 };
 
@@ -40,6 +43,7 @@ export function BookingForm({
   save,
   submitLabel,
   onSlotGone,
+  onValuesChange,
   onBack,
 }: Props) {
   const id = useId();
@@ -52,6 +56,7 @@ export function BookingForm({
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors },
   } = useForm<BookingFormValues>({
     resolver: zodResolver(bookingFormSchema),
@@ -89,6 +94,8 @@ export function BookingForm({
       noValidate
       aria-labelledby={`${id}-heading`}
       onSubmit={submit}
+      // Ввод в любом поле всплывает сюда: страница всегда знает текущие имя и email.
+      onChange={() => onValuesChange(getValues())}
       className="flex flex-col gap-4 rounded-xl border p-5"
     >
       <h2 id={`${id}-heading`} className="text-xl font-semibold">

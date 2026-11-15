@@ -141,4 +141,32 @@ describe('страница бронирования: запись', () => {
     expect(await screen.findByRole('list', { name: 'Свободное время' })).toBeInTheDocument();
     expect(screen.queryByRole('form', { name: 'Ваши данные' })).not.toBeInTheDocument();
   });
+
+  it('после «Другое время» форма для нового времени открывается с введёнными данными', async () => {
+    const user = userEvent.setup();
+    mockEventTypesApi([consultation]);
+    const { created } = mockBookingApi({
+      slots: { '2026-11-17': [slot('09:00', '10:00'), slot('10:00', '11:00')] },
+    });
+    renderAt(DAY);
+    await chooseTime(user, '09:00');
+    await user.type(screen.getByLabelText('Имя'), 'Анна');
+    await user.type(screen.getByLabelText('Email'), 'anna@example.com');
+
+    await user.click(screen.getByRole('button', { name: 'Другое время' }));
+    await chooseTime(user, '10:00');
+
+    expect(screen.getByLabelText('Имя')).toHaveValue('Анна');
+    expect(screen.getByLabelText('Email')).toHaveValue('anna@example.com');
+    await user.click(screen.getByRole('button', { name: 'Записаться' }));
+    await screen.findByRole('region', { name: 'Вы записаны' });
+    expect(created).toEqual([
+      {
+        eventTypeId: consultation.id,
+        startAt: '2026-11-17T10:00:00+05:00',
+        guestName: 'Анна',
+        guestEmail: 'anna@example.com',
+      },
+    ]);
+  });
 });
