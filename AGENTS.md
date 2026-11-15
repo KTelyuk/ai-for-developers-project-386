@@ -8,7 +8,7 @@
 
 - `mise install` — поставить Node.js и инструменты, затем `npm ci` (хук mise).
 - `mise run install` — `npm ci` и установка git-хуков hk.
-- `mise run dev` — бэкенд (:3000) и фронтенд (:5173) в фоне через mise daemons. Статус: `mise daemons status`, логи: `mise daemons logs backend`, остановка: `mise daemons stop`.
+- `mise run dev` — бэкенд (:3000) и фронтенд (:5173) в фоне через mise daemons. Бэкенд стартует с флагом `--seed`: данные в памяти, поэтому после каждого перезапуска `node --watch` он заново создаёт типы встреч из `backend/src/dev-seed.ts`. Статус: `mise daemons status`, логи: `mise daemons logs backend`, остановка: `mise daemons stop`.
 - `mise run check` — все проверки: линтеры, типы, тесты. Её же вызывает CI. Перед коммитом она должна проходить.
 - `mise run lint` / `mise run format` — линтеры hk (Oxlint, oxfmt, jactionlint и др.) / автоисправление.
 - `mise run typecheck`, `mise run test`, `mise run build`.
