@@ -8,3 +8,5 @@ frontend/src/components/ui/
 .github/workflows/README.md
 .claude/skills/
 skills-lock.json
+# Пишет release-please в своём формате при каждом релизе.
+CHANGELOG.md
