@@ -247,6 +247,18 @@ docker run --rm --init --name call-calendar --publish 3000:3000 call-calendar
 
 Те же команды выполняет CI в job `docker`: собирает образ, запускает контейнер, ждёт health-check и прогоняет e2e против него.
 
+### MCP для ИИ-агента
+
+В [`.mcp.json`](.mcp.json) лежит проектная конфигурация MCP для Claude Code: сервер [Render MCP](https://render.com/docs/mcp-server), через который агент создаёт сервис, смотрит деплои, логи и переменные окружения. Токена в файле нет: Claude Code подставляет его из переменной окружения `RENDER_API_KEY`.
+
+1. Создайте API-ключ в Render: **Account Settings → API Keys → Create API Key**.
+2. Задайте переменную окружения `RENDER_API_KEY` с этим ключом:
+   - macOS / Linux: `export RENDER_API_KEY=...` в `~/.zshrc` или `~/.bashrc`;
+   - Windows (PowerShell): `[Environment]::SetEnvironmentVariable('RENDER_API_KEY', '...', 'User')`.
+3. Перезапустите Claude Code и подтвердите подключение сервера `render` из `.mcp.json`.
+
+Ключ даёт доступ ко всему workspace Render: не вписывайте его в `.mcp.json` и не коммитьте.
+
 ## План реализации
 
 Работа идёт циклом: обсуждение → спецификация → тикеты → реализация → проверка. Каждый этап заканчивается коммитом; этап готов, когда все его проверки проходят.
