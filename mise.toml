@@ -23,6 +23,17 @@ run = ["npm ci", "hk install"]
 description = "Compile TypeSpec to OpenAPI, generate backend types and the frontend SDK"
 run = ["npm run build -w typespec", "npm run generate -w backend", "npm run generate -w frontend"]
 
+# Генерация повторяется и сверяется с закоммиченным: правка контракта без `mise run generate`
+# или ручная правка сгенерированного кода роняет проверку. `--intent-to-add` показывает в диффе
+# и новые сгенерированные файлы, которых нет в git.
+[tasks.check-generated]
+description = "Regenerate OpenAPI, backend types and the frontend SDK and fail if they differ from git"
+depends = ["generate"]
+run = [
+  "git add --intent-to-add -- openapi backend/src/api frontend/src/api",
+  "git diff --exit-code -- openapi backend/src/api frontend/src/api",
+]
+
 [tasks.dev]
 description = "Start backend and frontend dev servers in the background"
 run = "mise daemons start"
@@ -47,12 +58,16 @@ run = ["npm test -w backend -- --coverage", "npm test -w frontend -- --coverage"
 description = "Build the frontend"
 run = "npm run build -w frontend"
 
+# Все проверки одной командой — локально, в pre-push и в CI: сначала сгенерированный код,
+# затем параллельно линтеры, типы и тесты, в конце e2e в браузере против настоящего сервера.
 [tasks.check]
-description = "Run all checks: lint, typecheck, tests"
-depends = ["lint", "typecheck", "test"]
+description = "Run all checks: generated code, lint, typecheck, tests, e2e in a browser"
+depends = ["check-generated"]
+run = ["mise run lint ::: typecheck ::: test", "mise run e2e"]
 
-# Не входит в check: нужен запущенный сервер. Без E2E_BASE_URL Playwright сам поднимает
-# бэкенд с собранным фронтендом, поэтому сначала собирается фронтенд; в CI E2E_BASE_URL — контейнер.
+# Без E2E_BASE_URL Playwright сам поднимает бэкенд с собранным фронтендом (настоящий сервер,
+# ответы API не подменяются), поэтому сначала собирается фронтенд. С E2E_BASE_URL — против
+# уже запущенного приложения, например контейнера в CI.
 [tasks.e2e]
 description = "Build the frontend and run Playwright e2e tests against the app"
 depends = ["build"]
